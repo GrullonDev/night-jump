@@ -30,11 +30,15 @@ class NightJumpGame extends FlameGame
   final ValueNotifier<int> score = ValueNotifier<int>(0);
   final ValueNotifier<int> highScore = ValueNotifier<int>(0);
   final ValueNotifier<bool> isNewHighScore = ValueNotifier<bool>(false);
+  final ValueNotifier<Duration> flightTime = ValueNotifier<Duration>(
+    Duration.zero,
+  );
 
   GameStatus status = GameStatus.menu;
 
   late final OrbComponent orb;
   double _spawnTimer = 0;
+  double _flightSeconds = 0;
 
   @override
   Future<void> onLoad() async {
@@ -54,7 +58,9 @@ class NightJumpGame extends FlameGame
     status = GameStatus.playing;
     score.value = 0;
     isNewHighScore.value = false;
+    flightTime.value = Duration.zero;
     _spawnTimer = 0;
+    _flightSeconds = 0;
 
     children.whereType<ObstacleComponent>().toList().forEach(
           (obstacle) => obstacle.removeFromParent(),
@@ -100,6 +106,9 @@ class NightJumpGame extends FlameGame
   void update(double dt) {
     super.update(dt);
     if (status != GameStatus.playing) return;
+
+    _flightSeconds += dt;
+    flightTime.value = Duration(milliseconds: (_flightSeconds * 1000).round());
 
     _spawnTimer += dt;
     if (_spawnTimer >= _obstacleInterval) {
