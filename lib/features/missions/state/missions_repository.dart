@@ -20,6 +20,19 @@ class MissionsRepository {
   static const _dailyBestRunTarget = 10;
   static const _weeklyScoreTarget = 50000;
 
+  Future<int> getStardust() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getInt(_stardustKey) ?? 0;
+  }
+
+  Future<bool> spendStardust(int amount) async {
+    final prefs = await SharedPreferences.getInstance();
+    final current = prefs.getInt(_stardustKey) ?? 0;
+    if (current < amount) return false;
+    await prefs.setInt(_stardustKey, current - amount);
+    return true;
+  }
+
   Future<void> recordRunFinished({required int obstaclesCleared}) async {
     final prefs = await SharedPreferences.getInstance();
     await _rolloverIfNeeded(prefs);
