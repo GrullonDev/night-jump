@@ -8,7 +8,13 @@ import 'package:night_jump/utils/responsive/responsive_extension.dart';
 import 'package:night_jump/utils/theme/app_color.dart';
 
 class HomeLayout extends StatelessWidget {
-  const HomeLayout({super.key});
+  const HomeLayout({super.key, this.onTapToPlay, this.highScore = 0});
+
+  /// Called when the player taps the orb / "TOCA PARA SALTAR" area.
+  /// When used as the game's menu overlay this starts a new run.
+  final VoidCallback? onTapToPlay;
+
+  final int highScore;
 
   @override
   Widget build(BuildContext context) {
@@ -24,13 +30,21 @@ class HomeLayout extends StatelessWidget {
             padding: EdgeInsets.symmetric(horizontal: horizontalPadding),
             child: Column(
               children: [
-                _buildHeader(),
+                _buildHeader(highScore),
                 const SizedBox(height: 40),
                 _buildTitle(titleFontSize),
                 const Spacer(),
-                CharacterOrb(size: orbSize),
+                GestureDetector(
+                  onTap: onTapToPlay,
+                  behavior: HitTestBehavior.opaque,
+                  child: CharacterOrb(size: orbSize),
+                ),
                 const Spacer(),
-                _buildTapText(),
+                GestureDetector(
+                  onTap: onTapToPlay,
+                  behavior: HitTestBehavior.opaque,
+                  child: _buildTapText(),
+                ),
                 const SizedBox(height: 20),
                 HeadphoneIcon(),
                 const SizedBox(height: 30),
@@ -47,7 +61,7 @@ class HomeLayout extends StatelessWidget {
   }
 }
 
-Widget _buildHeader() {
+Widget _buildHeader(int highScore) {
   return Row(
     children: [
       Container(
@@ -76,7 +90,7 @@ Widget _buildHeader() {
                   ),
                 ),
                 Text(
-                  '24,890',
+                  '$highScore',
                   style: TextStyle(
                     color: AppColor.onSurface,
                     fontSize: 16,

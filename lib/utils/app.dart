@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import 'package:night_jump/features/home/page/home_page.dart';
+import 'package:night_jump/features/game/page/game_page.dart';
 import 'package:night_jump/utils/theme/app_color.dart';
 
 class MyApp extends StatelessWidget {
@@ -9,11 +9,11 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Night Jump (Demo)',
+      title: 'Night Jump',
       theme: ThemeData(
         colorScheme: .fromSeed(seedColor: AppColor.inversePrimary),
       ),
-      home: const HomePage(),
+      home: const GamePage(),
     );
   }
 }

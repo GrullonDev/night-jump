@@ -4,7 +4,10 @@ import 'package:night_jump/features/home/page/home_layout.dart';
 import 'package:night_jump/utils/theme/app_color.dart';
 
 class HomePage extends StatelessWidget {
-  const HomePage({super.key});
+  const HomePage({super.key, this.onTapToPlay, this.highScore = 0});
+
+  final VoidCallback? onTapToPlay;
+  final int highScore;
 
   @override
   Widget build(BuildContext context) {
@@ -21,7 +24,7 @@ class HomePage extends StatelessWidget {
             ],
           ),
         ),
-        child: HomeLayout(),
+        child: HomeLayout(onTapToPlay: onTapToPlay, highScore: highScore),
       ),
     );
   }
