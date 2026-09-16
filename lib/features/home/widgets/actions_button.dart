@@ -4,10 +4,16 @@ import 'package:night_jump/features/home/widgets/button_circle.dart';
 import 'package:night_jump/features/home/widgets/home_button.dart';
 
 class ButtonActions extends StatelessWidget {
-  const ButtonActions({super.key, this.onTapRetos, this.onTapPalette});
+  const ButtonActions({
+    super.key,
+    this.onTapRetos,
+    this.onTapPalette,
+    this.onTapRanking,
+  });
 
   final VoidCallback? onTapRetos;
   final VoidCallback? onTapPalette;
+  final VoidCallback? onTapRanking;
 
   @override
   Widget build(BuildContext context) {
@@ -20,7 +26,11 @@ class ButtonActions extends StatelessWidget {
           onTap: onTapRetos,
         ),
         const SizedBox(width: 16),
-        HomeButton(icon: Icons.emoji_events_rounded, label: 'RANKING'),
+        HomeButton(
+          icon: Icons.emoji_events_rounded,
+          label: 'RANKING',
+          onTap: onTapRanking,
+        ),
         const SizedBox(width: 16),
         ButtonCircle(icon: Icons.palette_rounded, onTap: onTapPalette),
       ],

@@ -14,6 +14,7 @@ class HomeLayout extends StatelessWidget {
     this.highScore = 0,
     this.onTapRetos,
     this.onTapPalette,
+    this.onTapRanking,
   });
 
   final VoidCallback? onTapToPlay;
@@ -23,6 +24,8 @@ class HomeLayout extends StatelessWidget {
   final VoidCallback? onTapRetos;
 
   final VoidCallback? onTapPalette;
+
+  final VoidCallback? onTapRanking;
 
   @override
   Widget build(BuildContext context) {
@@ -59,6 +62,7 @@ class HomeLayout extends StatelessWidget {
                 ButtonActions(
                   onTapRetos: onTapRetos,
                   onTapPalette: onTapPalette,
+                  onTapRanking: onTapRanking,
                 ),
                 const SizedBox(height: 24),
                 SeasonText(),
@@ -115,14 +119,18 @@ Widget _buildHeader(int highScore) {
         ),
       ),
       const Spacer(),
-      _buildIconCircle(Icons.volume_up_rounded),
+      _buildIconCircle(Icons.volume_up_rounded, () {
+        /* Lógica de sonido */
+      }),
       const SizedBox(width: 12),
-      _buildIconCircle(Icons.settings_rounded),
+      _buildIconCircle(Icons.settings_rounded, () {
+        /* Lógica de ajustes */
+      }),
     ],
   );
 }
 
-Widget _buildIconCircle(IconData icon) {
+Widget _buildIconCircle(IconData icon, VoidCallback onPressed) {
   return Container(
     width: 44,
     height: 44,
@@ -131,7 +139,12 @@ Widget _buildIconCircle(IconData icon) {
       shape: BoxShape.circle,
       border: Border.all(color: AppColor.electricCyan.withValues(alpha: 0.2)),
     ),
-    child: Icon(icon, color: AppColor.slateWhite, size: 22),
+    child: IconButton(
+      icon: Icon(icon),
+      color: AppColor.slateWhite,
+      iconSize: 22,
+      onPressed: onPressed,
+    ),
   );
 }
 

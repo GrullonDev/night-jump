@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import 'package:night_jump/features/game/night_jump_game.dart';
 import 'package:night_jump/features/home/page/home_page.dart';
+import 'package:night_jump/features/leaderboard/page/leaderboard_sheet.dart';
 import 'package:night_jump/features/missions/page/missions_sheet.dart';
 import 'package:night_jump/features/themes/page/theme_gallery_page.dart';
 import 'package:night_jump/features/themes/state/theme_repository.dart';
@@ -29,6 +30,8 @@ class MenuOverlay extends StatelessWidget {
               ),
             ),
           ),
+          onTapRanking: () =>
+              showLeaderboardSheet(context, onPlayNow: game.startGame),
         );
       },
     );

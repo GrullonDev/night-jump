@@ -10,6 +10,7 @@ class HomePage extends StatelessWidget {
     this.highScore = 0,
     this.onTapRetos,
     this.onTapPalette,
+    this.onTapRanking,
   });
 
   final VoidCallback? onTapToPlay;
@@ -18,6 +19,8 @@ class HomePage extends StatelessWidget {
   final VoidCallback? onTapRetos;
 
   final VoidCallback? onTapPalette;
+
+  final VoidCallback? onTapRanking;
 
   @override
   Widget build(BuildContext context) {
@@ -39,6 +42,7 @@ class HomePage extends StatelessWidget {
           highScore: highScore,
           onTapRetos: onTapRetos,
           onTapPalette: onTapPalette,
+          onTapRanking: onTapRanking,
         ),
       ),
     );
