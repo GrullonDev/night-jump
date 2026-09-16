@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import 'package:flame/collisions.dart';
 import 'package:flame/components.dart';
@@ -30,6 +31,9 @@ class OrbComponent extends PositionComponent
 
   void jump() {
     velocityY = jumpVelocity;
+    if (game.hapticsEnabled.value) {
+      HapticFeedback.lightImpact();
+    }
   }
 
   @override
