@@ -1,0 +1,115 @@
+import 'package:flutter/material.dart';
+
+import 'package:night_jump/utils/theme/app_color.dart';
+
+class CharacterOrb extends StatelessWidget {
+  const CharacterOrb({super.key, this.size = 180});
+
+  /// Diameter of the outer ring. Inner rings/orb/glow scale proportionally.
+  final double size;
+
+  @override
+  Widget build(BuildContext context) {
+    final middleSize = size * (140 / 180);
+    final glowSize = size * (120 / 180);
+    final orbSize = size * (100 / 180);
+    final highlightSize = size * (30 / 180);
+    final highlightOffset = size * (25 / 180);
+    final highlightLeft = size * (35 / 180);
+
+    return SizedBox(
+      width: size,
+      height: size,
+      child: Stack(
+        alignment: Alignment.center,
+        children: [
+          // Outer ring
+          Container(
+            width: size,
+            height: size,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              border: Border.all(
+                color: AppColor.electricCyan.withValues(alpha: 0.15),
+                width: 1.5,
+              ),
+            ),
+          ),
+          // Middle ring
+          Container(
+            width: middleSize,
+            height: middleSize,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              border: Border.all(
+                color: AppColor.electricCyan.withValues(alpha: 0.1),
+                width: 1,
+              ),
+            ),
+          ),
+          // Glow effect
+          Container(
+            width: glowSize,
+            height: glowSize,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              boxShadow: [
+                BoxShadow(
+                  color: AppColor.intenseMagenta.withValues(alpha: 0.4),
+                  blurRadius: 40,
+                  spreadRadius: 10,
+                ),
+                BoxShadow(
+                  color: AppColor.neonRose.withValues(alpha: 0.2),
+                  blurRadius: 60,
+                  spreadRadius: 20,
+                ),
+              ],
+            ),
+          ),
+          // Main orb
+          Container(
+            width: orbSize,
+            height: orbSize,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              gradient: RadialGradient(
+                colors: [
+                  AppColor.intenseMagenta,
+                  AppColor.neonRose,
+                  AppColor.secondaryContainer,
+                ],
+                stops: const [0.0, 0.5, 1.0],
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: AppColor.intenseMagenta.withValues(alpha: 0.6),
+                  blurRadius: 30,
+                  spreadRadius: 5,
+                ),
+              ],
+            ),
+          ),
+          // Inner highlight
+          Positioned(
+            top: highlightOffset,
+            left: highlightLeft,
+            child: Container(
+              width: highlightSize,
+              height: highlightSize,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                gradient: RadialGradient(
+                  colors: [
+                    Colors.white.withValues(alpha: 0.8),
+                    Colors.white.withValues(alpha: 0.0),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
