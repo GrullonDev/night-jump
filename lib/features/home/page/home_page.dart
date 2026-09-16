@@ -9,13 +9,15 @@ class HomePage extends StatelessWidget {
     this.onTapToPlay,
     this.highScore = 0,
     this.onTapRetos,
+    this.onTapPalette,
   });
 
   final VoidCallback? onTapToPlay;
   final int highScore;
 
-  /// Called when the player taps the "RETOS" button.
   final VoidCallback? onTapRetos;
+
+  final VoidCallback? onTapPalette;
 
   @override
   Widget build(BuildContext context) {
@@ -36,6 +38,7 @@ class HomePage extends StatelessWidget {
           onTapToPlay: onTapToPlay,
           highScore: highScore,
           onTapRetos: onTapRetos,
+          onTapPalette: onTapPalette,
         ),
       ),
     );

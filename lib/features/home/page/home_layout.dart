@@ -13,6 +13,7 @@ class HomeLayout extends StatelessWidget {
     this.onTapToPlay,
     this.highScore = 0,
     this.onTapRetos,
+    this.onTapPalette,
   });
 
   final VoidCallback? onTapToPlay;
@@ -20,6 +21,8 @@ class HomeLayout extends StatelessWidget {
   final int highScore;
 
   final VoidCallback? onTapRetos;
+
+  final VoidCallback? onTapPalette;
 
   @override
   Widget build(BuildContext context) {
@@ -53,7 +56,10 @@ class HomeLayout extends StatelessWidget {
                 const SizedBox(height: 20),
                 HeadphoneIcon(),
                 const SizedBox(height: 30),
-                ButtonActions(onTapRetos: onTapRetos),
+                ButtonActions(
+                  onTapRetos: onTapRetos,
+                  onTapPalette: onTapPalette,
+                ),
                 const SizedBox(height: 24),
                 SeasonText(),
                 const SizedBox(height: 16),
