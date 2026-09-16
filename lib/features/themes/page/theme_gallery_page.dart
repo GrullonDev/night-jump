@@ -96,6 +96,8 @@ class _ThemeGalleryPageState extends State<ThemeGalleryPage> {
     final previewPalette = NeonPalette.byId(_previewPaletteId);
     final hasChanges = _previewPaletteId != _confirmedPaletteId;
     final maxWidth = context.responsive(mobile: double.infinity, tablet: 480.0);
+    final horizontalPadding = context.responsive(mobile: 20.0, tablet: 28.0);
+    final previewOrbSize = context.responsive(mobile: 200.0, tablet: 240.0);
 
     return Scaffold(
       backgroundColor: AppColor.canvasBase,
@@ -116,8 +118,8 @@ class _ThemeGalleryPageState extends State<ThemeGalleryPage> {
             child: ConstrainedBox(
               constraints: BoxConstraints(maxWidth: maxWidth),
               child: SingleChildScrollView(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 20,
+                padding: EdgeInsets.symmetric(
+                  horizontal: horizontalPadding,
                   vertical: 16,
                 ),
                 child: Column(
@@ -137,6 +139,7 @@ class _ThemeGalleryPageState extends State<ThemeGalleryPage> {
                             primary: previewPalette.primary,
                             secondary: previewPalette.secondary,
                             dimmed: _comfortMode,
+                            size: previewOrbSize,
                           ),
                           const SizedBox(height: 12),
                           Padding(
@@ -231,6 +234,8 @@ class _Header extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final titleFontSize = context.responsive(mobile: 22.0, tablet: 26.0);
+
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -248,7 +253,7 @@ class _Header extends StatelessWidget {
                   'TEMAS & PALETAS',
                   style: TextStyle(
                     color: AppColor.onSurface,
-                    fontSize: 22,
+                    fontSize: titleFontSize,
                     fontWeight: FontWeight.w800,
                     fontFamily: 'Sora',
                   ),

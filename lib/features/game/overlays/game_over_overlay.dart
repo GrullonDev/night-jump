@@ -17,6 +17,8 @@ class GameOverOverlay extends StatelessWidget {
       mobile: double.infinity,
       tablet: 480.0,
     );
+    final horizontalPadding = context.responsive(mobile: 24.0, tablet: 32.0);
+    final titleFontSize = context.responsive(mobile: 32.0, tablet: 40.0);
 
     return Container(
       color: AppColor.canvasBase.withValues(alpha: 0.9),
@@ -25,8 +27,8 @@ class GameOverOverlay extends StatelessWidget {
           child: ConstrainedBox(
             constraints: BoxConstraints(maxWidth: maxWidth),
             child: SingleChildScrollView(
-              padding: const EdgeInsets.symmetric(
-                horizontal: 24,
+              padding: EdgeInsets.symmetric(
+                horizontal: horizontalPadding,
                 vertical: 24,
               ),
               child: Column(
@@ -39,7 +41,7 @@ class GameOverOverlay extends StatelessWidget {
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       color: AppColor.electricCyan,
-                      fontSize: 32,
+                      fontSize: titleFontSize,
                       fontWeight: FontWeight.w800,
                       fontFamily: 'Sora',
                       shadows: [
@@ -125,8 +127,11 @@ class _SummaryCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cardPadding = context.responsive(mobile: 20.0, tablet: 28.0);
+    final scoreFontSize = context.responsive(mobile: 56.0, tablet: 68.0);
+
     return Container(
-      padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 20),
+      padding: EdgeInsets.symmetric(vertical: 24, horizontal: cardPadding),
       decoration: BoxDecoration(
         color: AppColor.hudGlass.withValues(alpha: 0.6),
         borderRadius: BorderRadius.circular(20),
@@ -160,7 +165,7 @@ class _SummaryCard extends StatelessWidget {
               '$score',
               style: TextStyle(
                 color: AppColor.onSurface,
-                fontSize: 56,
+                fontSize: scoreFontSize,
                 fontWeight: FontWeight.w800,
                 fontFamily: 'Sora',
                 shadows: [

@@ -100,8 +100,16 @@ class _MissionsContent extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final horizontalPadding = context.responsive(mobile: 20.0, tablet: 28.0);
+    final titleFontSize = context.responsive(mobile: 16.0, tablet: 18.0);
+
     return SingleChildScrollView(
-      padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
+      padding: EdgeInsets.fromLTRB(
+        horizontalPadding,
+        12,
+        horizontalPadding,
+        24,
+      ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -141,7 +149,7 @@ class _MissionsContent extends StatelessWidget {
                       'RETOS Y MISIONES',
                       style: TextStyle(
                         color: AppColor.onSurface,
-                        fontSize: 16,
+                        fontSize: titleFontSize,
                         fontWeight: FontWeight.w800,
                         fontFamily: 'Sora',
                       ),
