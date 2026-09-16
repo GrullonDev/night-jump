@@ -11,13 +11,16 @@ import 'package:night_jump/features/game/components/starfield_component.dart';
 import 'package:night_jump/features/game/state/game_status.dart';
 import 'package:night_jump/features/game/state/score_repository.dart';
 import 'package:night_jump/features/missions/state/missions_repository.dart';
+import 'package:night_jump/features/settings/state/settings_repository.dart';
 
 class NightJumpGame extends FlameGame with HasCollisionDetection, TapCallbacks {
   NightJumpGame({
     ScoreRepository? scoreRepository,
     MissionsRepository? missionsRepository,
+    SettingsRepository? settingsRepository,
   }) : scoreRepository = scoreRepository ?? ScoreRepository(),
-       missionsRepository = missionsRepository ?? MissionsRepository();
+       missionsRepository = missionsRepository ?? MissionsRepository(),
+       settingsRepository = settingsRepository ?? SettingsRepository();
 
   static const String menuOverlay = 'menu';
   static const String hudOverlay = 'hud';
@@ -27,6 +30,7 @@ class NightJumpGame extends FlameGame with HasCollisionDetection, TapCallbacks {
 
   final ScoreRepository scoreRepository;
   final MissionsRepository missionsRepository;
+  final SettingsRepository settingsRepository;
   final Random random = Random();
 
   final ValueNotifier<int> score = ValueNotifier<int>(0);
@@ -35,6 +39,8 @@ class NightJumpGame extends FlameGame with HasCollisionDetection, TapCallbacks {
   final ValueNotifier<Duration> flightTime = ValueNotifier<Duration>(
     Duration.zero,
   );
+  final ValueNotifier<bool> soundEnabled = ValueNotifier<bool>(true);
+  final ValueNotifier<bool> hapticsEnabled = ValueNotifier<bool>(true);
 
   GameStatus status = GameStatus.menu;
 
@@ -46,6 +52,8 @@ class NightJumpGame extends FlameGame with HasCollisionDetection, TapCallbacks {
   Future<void> onLoad() async {
     await super.onLoad();
     highScore.value = await scoreRepository.getHighScore();
+    soundEnabled.value = await settingsRepository.getSoundEnabled();
+    hapticsEnabled.value = await settingsRepository.getHapticsEnabled();
 
     add(StarfieldComponent());
     orb = OrbComponent();
@@ -77,6 +85,24 @@ class NightJumpGame extends FlameGame with HasCollisionDetection, TapCallbacks {
 
   void addScore() {
     score.value++;
+  }
+
+  Future<void> toggleSound() async {
+    soundEnabled.value = !soundEnabled.value;
+    await settingsRepository.setSoundEnabled(soundEnabled.value);
+  }
+
+  Future<void> toggleHaptics() async {
+    hapticsEnabled.value = !hapticsEnabled.value;
+    await settingsRepository.setHapticsEnabled(hapticsEnabled.value);
+  }
+
+  /// Clears all local progress (high score, missions/stardust, themes)
+  /// and refreshes in-memory state to match.
+  Future<void> resetProgress() async {
+    await settingsRepository.resetProgress();
+    highScore.value = 0;
+    isNewHighScore.value = false;
   }
 
   Future<void> endGame() async {
