@@ -15,6 +15,9 @@ class HomeLayout extends StatelessWidget {
     this.onTapRetos,
     this.onTapPalette,
     this.onTapRanking,
+    this.onTapSound,
+    this.soundEnabled = true,
+    this.onTapSettings,
   });
 
   final VoidCallback? onTapToPlay;
@@ -26,6 +29,12 @@ class HomeLayout extends StatelessWidget {
   final VoidCallback? onTapPalette;
 
   final VoidCallback? onTapRanking;
+
+  final VoidCallback? onTapSound;
+
+  final bool soundEnabled;
+
+  final VoidCallback? onTapSettings;
 
   @override
   Widget build(BuildContext context) {
@@ -41,7 +50,12 @@ class HomeLayout extends StatelessWidget {
             padding: EdgeInsets.symmetric(horizontal: horizontalPadding),
             child: Column(
               children: [
-                _buildHeader(highScore),
+                _buildHeader(
+                  highScore,
+                  soundEnabled,
+                  onTapSound,
+                  onTapSettings,
+                ),
                 const SizedBox(height: 40),
                 _buildTitle(titleFontSize),
                 const Spacer(),
@@ -76,7 +90,12 @@ class HomeLayout extends StatelessWidget {
   }
 }
 
-Widget _buildHeader(int highScore) {
+Widget _buildHeader(
+  int highScore,
+  bool soundEnabled,
+  VoidCallback? onTapSound,
+  VoidCallback? onTapSettings,
+) {
   return Row(
     children: [
       Container(
@@ -119,18 +138,17 @@ Widget _buildHeader(int highScore) {
         ),
       ),
       const Spacer(),
-      _buildIconCircle(Icons.volume_up_rounded, () {
-        /* Lógica de sonido */
-      }),
+      _buildIconCircle(
+        soundEnabled ? Icons.volume_up_rounded : Icons.volume_off_rounded,
+        onTapSound,
+      ),
       const SizedBox(width: 12),
-      _buildIconCircle(Icons.settings_rounded, () {
-        /* Lógica de ajustes */
-      }),
+      _buildIconCircle(Icons.settings_rounded, onTapSettings),
     ],
   );
 }
 
-Widget _buildIconCircle(IconData icon, VoidCallback onPressed) {
+Widget _buildIconCircle(IconData icon, VoidCallback? onPressed) {
   return Container(
     width: 44,
     height: 44,

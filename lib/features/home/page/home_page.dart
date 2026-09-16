@@ -11,6 +11,9 @@ class HomePage extends StatelessWidget {
     this.onTapRetos,
     this.onTapPalette,
     this.onTapRanking,
+    this.onTapSound,
+    this.soundEnabled = true,
+    this.onTapSettings,
   });
 
   final VoidCallback? onTapToPlay;
@@ -21,6 +24,12 @@ class HomePage extends StatelessWidget {
   final VoidCallback? onTapPalette;
 
   final VoidCallback? onTapRanking;
+
+  final VoidCallback? onTapSound;
+
+  final bool soundEnabled;
+
+  final VoidCallback? onTapSettings;
 
   @override
   Widget build(BuildContext context) {
@@ -43,6 +52,9 @@ class HomePage extends StatelessWidget {
           onTapRetos: onTapRetos,
           onTapPalette: onTapPalette,
           onTapRanking: onTapRanking,
+          onTapSound: onTapSound,
+          soundEnabled: soundEnabled,
+          onTapSettings: onTapSettings,
         ),
       ),
     );
