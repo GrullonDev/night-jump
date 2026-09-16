@@ -46,9 +46,7 @@ class PalettePreviewOrb extends StatelessWidget {
             height: size * 0.7,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              border: Border.all(
-                color: primary.withValues(alpha: 0.15),
-              ),
+              border: Border.all(color: primary.withValues(alpha: 0.15)),
             ),
           ),
           Container(

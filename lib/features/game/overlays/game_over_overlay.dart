@@ -13,10 +13,7 @@ class GameOverOverlay extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final maxWidth = context.responsive(
-      mobile: double.infinity,
-      tablet: 480.0,
-    );
+    final maxWidth = context.responsive(mobile: double.infinity, tablet: 480.0);
     final horizontalPadding = context.responsive(mobile: 24.0, tablet: 32.0);
     final titleFontSize = context.responsive(mobile: 32.0, tablet: 40.0);
 

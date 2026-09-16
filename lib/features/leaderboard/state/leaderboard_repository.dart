@@ -15,7 +15,7 @@ enum LeaderboardTab { global, friends, league }
 /// their real, locally saved high score.
 class LeaderboardRepository {
   LeaderboardRepository({ScoreRepository? scoreRepository})
-      : scoreRepository = scoreRepository ?? ScoreRepository();
+    : scoreRepository = scoreRepository ?? ScoreRepository();
 
   final ScoreRepository scoreRepository;
 
@@ -99,8 +99,7 @@ class LeaderboardRepository {
 
     final roster = switch (tab) {
       LeaderboardTab.global => _sampleRoster,
-      LeaderboardTab.friends =>
-        _sampleRoster.where((e) => e.isFriend).toList(),
+      LeaderboardTab.friends => _sampleRoster.where((e) => e.isFriend).toList(),
       LeaderboardTab.league => _sampleRoster.take(5).toList(),
     };
 

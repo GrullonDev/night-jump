@@ -25,20 +25,24 @@ class ObstacleComponent extends PositionComponent
     required double startX,
     required this.screenHeight,
     required Random random,
-  })  : gapCenterY = _edgeMargin +
-            random.nextDouble() * (screenHeight - 2 * _edgeMargin),
-        super(position: Vector2(startX, 0), size: Vector2(barWidth, 0));
+  }) : gapCenterY =
+           _edgeMargin + random.nextDouble() * (screenHeight - 2 * _edgeMargin),
+       super(position: Vector2(startX, 0), size: Vector2(barWidth, 0));
 
   @override
   Future<void> onLoad() async {
-    add(RectangleHitbox(
-      size: Vector2(barWidth, gapCenterY - gapHeight / 2),
-      position: Vector2.zero(),
-    ));
-    add(RectangleHitbox(
-      size: Vector2(barWidth, screenHeight - (gapCenterY + gapHeight / 2)),
-      position: Vector2(0, gapCenterY + gapHeight / 2),
-    ));
+    add(
+      RectangleHitbox(
+        size: Vector2(barWidth, gapCenterY - gapHeight / 2),
+        position: Vector2.zero(),
+      ),
+    );
+    add(
+      RectangleHitbox(
+        size: Vector2(barWidth, screenHeight - (gapCenterY + gapHeight / 2)),
+        position: Vector2(0, gapCenterY + gapHeight / 2),
+      ),
+    );
   }
 
   @override

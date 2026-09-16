@@ -32,7 +32,9 @@ class SettingsSheet extends StatelessWidget {
           child: Container(
             decoration: BoxDecoration(
               color: AppColor.canvasMidnight,
-              borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+              borderRadius: const BorderRadius.vertical(
+                top: Radius.circular(28),
+              ),
               border: Border.all(
                 color: AppColor.electricCyan.withValues(alpha: 0.15),
               ),
@@ -218,7 +220,11 @@ class _ResetProgressTile extends StatelessWidget {
           ),
           child: Row(
             children: [
-              Icon(Icons.delete_outline_rounded, color: AppColor.neonRose, size: 18),
+              Icon(
+                Icons.delete_outline_rounded,
+                color: AppColor.neonRose,
+                size: 18,
+              ),
               const SizedBox(width: 12),
               Expanded(
                 child: Column(
@@ -263,18 +269,27 @@ class _ResetProgressTile extends StatelessWidget {
         ),
         content: Text(
           'Esta acción borrará tu récord, retos, polvo astral y temas desbloqueados. No se puede deshacer.',
-          style: TextStyle(color: AppColor.slateGlow, fontFamily: 'Space Grotesk'),
+          style: TextStyle(
+            color: AppColor.slateGlow,
+            fontFamily: 'Space Grotesk',
+          ),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
-            child: Text('Cancelar', style: TextStyle(color: AppColor.slateGlow)),
+            child: Text(
+              'Cancelar',
+              style: TextStyle(color: AppColor.slateGlow),
+            ),
           ),
           TextButton(
             onPressed: () => Navigator.of(context).pop(true),
             child: Text(
               'Restablecer',
-              style: TextStyle(color: AppColor.neonRose, fontWeight: FontWeight.w700),
+              style: TextStyle(
+                color: AppColor.neonRose,
+                fontWeight: FontWeight.w700,
+              ),
             ),
           ),
         ],

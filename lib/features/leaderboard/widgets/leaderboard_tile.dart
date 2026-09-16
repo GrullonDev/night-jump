@@ -24,8 +24,8 @@ class LeaderboardTile extends StatelessWidget {
         border: accentColor != null
             ? Border(left: BorderSide(color: accentColor, width: 3))
             : (isPlayer
-                ? Border.all(color: AppColor.neonRose.withValues(alpha: 0.4))
-                : null),
+                  ? Border.all(color: AppColor.neonRose.withValues(alpha: 0.4))
+                  : null),
       ),
       child: Row(
         children: [
@@ -42,7 +42,9 @@ class LeaderboardTile extends StatelessWidget {
             decoration: BoxDecoration(
               color: entry.avatarColor.withValues(alpha: 0.15),
               shape: BoxShape.circle,
-              border: Border.all(color: entry.avatarColor.withValues(alpha: 0.4)),
+              border: Border.all(
+                color: entry.avatarColor.withValues(alpha: 0.4),
+              ),
             ),
             child: Icon(entry.avatarIcon, color: entry.avatarColor, size: 18),
           ),

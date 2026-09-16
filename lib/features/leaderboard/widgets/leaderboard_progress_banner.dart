@@ -28,7 +28,11 @@ class LeaderboardProgressBanner extends StatelessWidget {
         ),
         child: Row(
           children: [
-            Icon(Icons.emoji_events_rounded, size: 16, color: AppColor.electricCyan),
+            Icon(
+              Icons.emoji_events_rounded,
+              size: 16,
+              color: AppColor.electricCyan,
+            ),
             const SizedBox(width: 8),
             Text(
               'Vas a la cabeza de esta lista',

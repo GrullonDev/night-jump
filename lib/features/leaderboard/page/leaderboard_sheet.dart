@@ -64,7 +64,9 @@ class _LeaderboardSheetState extends State<LeaderboardSheet> {
           child: Container(
             decoration: BoxDecoration(
               color: AppColor.canvasMidnight,
-              borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+              borderRadius: const BorderRadius.vertical(
+                top: Radius.circular(28),
+              ),
               border: Border.all(
                 color: AppColor.electricCyan.withValues(alpha: 0.2),
               ),
@@ -76,7 +78,9 @@ class _LeaderboardSheetState extends State<LeaderboardSheet> {
                   return const Padding(
                     padding: EdgeInsets.symmetric(vertical: 80),
                     child: Center(
-                      child: CircularProgressIndicator(color: AppColor.electricCyan),
+                      child: CircularProgressIndicator(
+                        color: AppColor.electricCyan,
+                      ),
                     ),
                   );
                 }
@@ -167,7 +171,11 @@ class _LeaderboardContent extends StatelessWidget {
                     const SizedBox(height: 2),
                     Row(
                       children: [
-                        Icon(Icons.circle, size: 6, color: AppColor.electricCyan),
+                        Icon(
+                          Icons.circle,
+                          size: 6,
+                          color: AppColor.electricCyan,
+                        ),
                         const SizedBox(width: 6),
                         Text(
                           'SERVIDOR ACTIVO • ${snapshot.seasonLabel}',
@@ -198,7 +206,11 @@ class _LeaderboardContent extends StatelessWidget {
             ),
             child: Row(
               children: [
-                Icon(Icons.access_time_rounded, size: 14, color: AppColor.slateGlow),
+                Icon(
+                  Icons.access_time_rounded,
+                  size: 14,
+                  color: AppColor.slateGlow,
+                ),
                 const SizedBox(width: 6),
                 Text(
                   'Termina en ${_formatCountdown(snapshot.seasonEndsIn)}',
@@ -210,7 +222,11 @@ class _LeaderboardContent extends StatelessWidget {
                   ),
                 ),
                 const Spacer(),
-                Icon(Icons.bolt_rounded, size: 14, color: AppColor.electricCyan),
+                Icon(
+                  Icons.bolt_rounded,
+                  size: 14,
+                  color: AppColor.electricCyan,
+                ),
                 const SizedBox(width: 4),
                 Text(
                   snapshot.modeLabel,
@@ -227,7 +243,8 @@ class _LeaderboardContent extends StatelessWidget {
           const SizedBox(height: 16),
           _LeaderboardTabBar(tab: tab, onChanged: onTabChanged),
           const SizedBox(height: 16),
-          for (final entry in snapshot.topEntries) LeaderboardTile(entry: entry),
+          for (final entry in snapshot.topEntries)
+            LeaderboardTile(entry: entry),
           const SizedBox(height: 4),
           LeaderboardTile(entry: snapshot.playerEntry),
           const SizedBox(height: 8),
@@ -235,7 +252,8 @@ class _LeaderboardContent extends StatelessWidget {
             pointsToNextRank: snapshot.pointsToNextRank,
             nextRank: snapshot.nextRank,
             currentScore: snapshot.playerEntry.score,
-            nextRankScore: snapshot.playerEntry.score + snapshot.pointsToNextRank,
+            nextRankScore:
+                snapshot.playerEntry.score + snapshot.pointsToNextRank,
           ),
           const SizedBox(height: 16),
           _PlayNowButton(onTap: onPlayNow),
@@ -362,7 +380,11 @@ class _PlayNowButton extends StatelessWidget {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(Icons.play_arrow_rounded, color: AppColor.canvasBase, size: 20),
+              Icon(
+                Icons.play_arrow_rounded,
+                color: AppColor.canvasBase,
+                size: 20,
+              ),
               const SizedBox(width: 8),
               Text(
                 'JUGAR AHORA & SUPERAR RÉCORD',
