@@ -2,9 +2,8 @@ import 'package:flutter/material.dart';
 
 import 'package:night_jump/features/game/night_jump_game.dart';
 import 'package:night_jump/features/home/page/home_page.dart';
+import 'package:night_jump/features/missions/page/missions_sheet.dart';
 
-/// Main menu, shown as the 'menu' overlay of [NightJumpGame]. Reuses the
-/// existing home screen UI and wires the tap-to-play area to start a run.
 class MenuOverlay extends StatelessWidget {
   const MenuOverlay({super.key, required this.game});
 
@@ -18,6 +17,8 @@ class MenuOverlay extends StatelessWidget {
         return HomePage(
           onTapToPlay: game.startGame,
           highScore: highScore,
+          onTapRetos: () =>
+              showMissionsSheet(context, repository: game.missionsRepository),
         );
       },
     );

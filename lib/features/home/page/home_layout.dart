@@ -8,13 +8,18 @@ import 'package:night_jump/utils/responsive/responsive_extension.dart';
 import 'package:night_jump/utils/theme/app_color.dart';
 
 class HomeLayout extends StatelessWidget {
-  const HomeLayout({super.key, this.onTapToPlay, this.highScore = 0});
+  const HomeLayout({
+    super.key,
+    this.onTapToPlay,
+    this.highScore = 0,
+    this.onTapRetos,
+  });
 
-  /// Called when the player taps the orb / "TOCA PARA SALTAR" area.
-  /// When used as the game's menu overlay this starts a new run.
   final VoidCallback? onTapToPlay;
 
   final int highScore;
+
+  final VoidCallback? onTapRetos;
 
   @override
   Widget build(BuildContext context) {
@@ -48,7 +53,7 @@ class HomeLayout extends StatelessWidget {
                 const SizedBox(height: 20),
                 HeadphoneIcon(),
                 const SizedBox(height: 30),
-                ButtonActions(),
+                ButtonActions(onTapRetos: onTapRetos),
                 const SizedBox(height: 24),
                 SeasonText(),
                 const SizedBox(height: 16),

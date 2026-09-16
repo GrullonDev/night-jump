@@ -1,22 +1,23 @@
 import 'dart:math';
 
+import 'package:flutter/foundation.dart';
+
 import 'package:flame/events.dart';
 import 'package:flame/game.dart';
-import 'package:flutter/foundation.dart';
 
 import 'package:night_jump/features/game/components/obstacle_component.dart';
 import 'package:night_jump/features/game/components/orb_component.dart';
 import 'package:night_jump/features/game/components/starfield_component.dart';
 import 'package:night_jump/features/game/state/game_status.dart';
 import 'package:night_jump/features/game/state/score_repository.dart';
+import 'package:night_jump/features/missions/state/missions_repository.dart';
 
-/// Root Flame game for Night Jump. A single instance drives the three
-/// screens (menu, gameplay, game over) through Flutter overlays instead of
-/// separate routes, so the game world never rebuilds between states.
-class NightJumpGame extends FlameGame
-    with HasCollisionDetection, TapCallbacks {
-  NightJumpGame({ScoreRepository? scoreRepository})
-      : scoreRepository = scoreRepository ?? ScoreRepository();
+class NightJumpGame extends FlameGame with HasCollisionDetection, TapCallbacks {
+  NightJumpGame({
+    ScoreRepository? scoreRepository,
+    MissionsRepository? missionsRepository,
+  }) : scoreRepository = scoreRepository ?? ScoreRepository(),
+       missionsRepository = missionsRepository ?? MissionsRepository();
 
   static const String menuOverlay = 'menu';
   static const String hudOverlay = 'hud';
@@ -25,6 +26,7 @@ class NightJumpGame extends FlameGame
   static const double _obstacleInterval = 1.6;
 
   final ScoreRepository scoreRepository;
+  final MissionsRepository missionsRepository;
   final Random random = Random();
 
   final ValueNotifier<int> score = ValueNotifier<int>(0);
@@ -63,8 +65,8 @@ class NightJumpGame extends FlameGame
     _flightSeconds = 0;
 
     children.whereType<ObstacleComponent>().toList().forEach(
-          (obstacle) => obstacle.removeFromParent(),
-        );
+      (obstacle) => obstacle.removeFromParent(),
+    );
     orb.reset();
 
     overlays.remove(menuOverlay);
@@ -86,6 +88,7 @@ class NightJumpGame extends FlameGame
     final beatHighScore = await scoreRepository.saveScoreIfHigh(score.value);
     isNewHighScore.value = beatHighScore;
     if (beatHighScore) highScore.value = score.value;
+    await missionsRepository.recordRunFinished(obstaclesCleared: score.value);
 
     overlays.add(gameOverOverlay);
   }
@@ -93,8 +96,8 @@ class NightJumpGame extends FlameGame
   void returnToMenu() {
     status = GameStatus.menu;
     children.whereType<ObstacleComponent>().toList().forEach(
-          (obstacle) => obstacle.removeFromParent(),
-        );
+      (obstacle) => obstacle.removeFromParent(),
+    );
     orb.reset();
     overlays.remove(gameOverOverlay);
     overlays.remove(hudOverlay);
@@ -113,11 +116,13 @@ class NightJumpGame extends FlameGame
     _spawnTimer += dt;
     if (_spawnTimer >= _obstacleInterval) {
       _spawnTimer = 0;
-      add(ObstacleComponent(
-        startX: size.x + ObstacleComponent.barWidth,
-        screenHeight: size.y,
-        random: random,
-      ));
+      add(
+        ObstacleComponent(
+          startX: size.x + ObstacleComponent.barWidth,
+          screenHeight: size.y,
+          random: random,
+        ),
+      );
     }
   }
 

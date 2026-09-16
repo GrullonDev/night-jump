@@ -4,10 +4,18 @@ import 'package:night_jump/features/home/page/home_layout.dart';
 import 'package:night_jump/utils/theme/app_color.dart';
 
 class HomePage extends StatelessWidget {
-  const HomePage({super.key, this.onTapToPlay, this.highScore = 0});
+  const HomePage({
+    super.key,
+    this.onTapToPlay,
+    this.highScore = 0,
+    this.onTapRetos,
+  });
 
   final VoidCallback? onTapToPlay;
   final int highScore;
+
+  /// Called when the player taps the "RETOS" button.
+  final VoidCallback? onTapRetos;
 
   @override
   Widget build(BuildContext context) {
@@ -24,7 +32,11 @@ class HomePage extends StatelessWidget {
             ],
           ),
         ),
-        child: HomeLayout(onTapToPlay: onTapToPlay, highScore: highScore),
+        child: HomeLayout(
+          onTapToPlay: onTapToPlay,
+          highScore: highScore,
+          onTapRetos: onTapRetos,
+        ),
       ),
     );
   }
