@@ -25,6 +25,7 @@ class NightJumpGame extends FlameGame with HasCollisionDetection, TapCallbacks {
   static const String menuOverlay = 'menu';
   static const String hudOverlay = 'hud';
   static const String gameOverOverlay = 'gameOver';
+  static const String countdownOverlay = 'countdown';
 
   static const double _obstacleInterval = 1.6;
 
@@ -65,7 +66,7 @@ class NightJumpGame extends FlameGame with HasCollisionDetection, TapCallbacks {
   }
 
   void startGame() {
-    status = GameStatus.playing;
+    status = GameStatus.countdown;
     score.value = 0;
     isNewHighScore.value = false;
     flightTime.value = Duration.zero;
@@ -80,7 +81,14 @@ class NightJumpGame extends FlameGame with HasCollisionDetection, TapCallbacks {
     overlays.remove(menuOverlay);
     overlays.remove(gameOverOverlay);
     overlays.add(hudOverlay);
+    overlays.add(countdownOverlay);
     resumeEngine();
+  }
+
+  /// Called by [CountdownOverlay] when the 3-2-1 animation finishes.
+  void beginPlaying() {
+    status = GameStatus.playing;
+    overlays.remove(countdownOverlay);
   }
 
   void addScore() {
