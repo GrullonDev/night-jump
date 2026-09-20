@@ -11,17 +11,18 @@ import 'package:night_jump/utils/theme/app_color.dart';
 
 class OrbComponent extends PositionComponent
     with CollisionCallbacks, HasGameReference<NightJumpGame> {
-  static const double radius = 22;
+  static const double visualRadius = 22;
+  static const double hitboxRadius = 16;
   static const double gravity = 900;
   static const double jumpVelocity = -320;
 
   double velocityY = 0;
 
-  OrbComponent() : super(size: Vector2.all(radius * 2), anchor: Anchor.center);
+  OrbComponent() : super(size: Vector2.all(visualRadius * 2), anchor: Anchor.center);
 
   @override
   Future<void> onLoad() async {
-    add(CircleHitbox(radius: radius, anchor: Anchor.center));
+    add(CircleHitbox(radius: hitboxRadius, anchor: Anchor.center));
   }
 
   void reset() {
@@ -44,8 +45,8 @@ class OrbComponent extends PositionComponent
     velocityY += gravity * dt;
     position.y += velocityY * dt;
 
-    if (position.y - radius <= 0 || position.y + radius >= game.size.y) {
-      position.y = position.y.clamp(radius, game.size.y - radius);
+    if (position.y - visualRadius <= 0 || position.y + visualRadius >= game.size.y) {
+      position.y = position.y.clamp(visualRadius, game.size.y - visualRadius);
       game.endGame();
     }
   }
@@ -63,11 +64,11 @@ class OrbComponent extends PositionComponent
 
   @override
   void render(Canvas canvas) {
-    final center = Offset(radius, radius);
+    final center = Offset(visualRadius, visualRadius);
 
     canvas.drawCircle(
       center,
-      radius * 1.6,
+      visualRadius * 1.6,
       Paint()
         ..color = AppColor.intenseMagenta.withValues(alpha: 0.35)
         ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 18),
@@ -83,16 +84,16 @@ class OrbComponent extends PositionComponent
     );
     canvas.drawCircle(
       center,
-      radius,
+      visualRadius,
       Paint()
         ..shader = gradient.createShader(
-          Rect.fromCircle(center: center, radius: radius),
+          Rect.fromCircle(center: center, radius: visualRadius),
         ),
     );
 
     canvas.drawCircle(
-      Offset(radius - radius * 0.35, radius - radius * 0.35),
-      radius * 0.3,
+      Offset(visualRadius - visualRadius * 0.35, visualRadius - visualRadius * 0.35),
+      visualRadius * 0.3,
       Paint()..color = const Color(0xCCFFFFFF),
     );
   }
