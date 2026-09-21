@@ -212,6 +212,9 @@ class NightJumpGame extends FlameGame with HasCollisionDetection, TapCallbacks {
       showShieldDialogue.value = false;
       overlays.remove(shieldDialogueOverlay);
       isPaused.value = false;
+      // Offset the orb forward to clear the obstacle it just hit
+      orb.position.x += ObstacleComponent.barWidth + 10;
+      status = GameStatus.playing;
       resumeEngine();
       sound.ui();
     }
@@ -240,9 +243,12 @@ class NightJumpGame extends FlameGame with HasCollisionDetection, TapCallbacks {
   }
 
   void showShieldOffer() {
-    if (shieldCount.value > 0 && !showShieldDialogue.value) {
+    if (showShieldDialogue.value) return;
+    if (shieldCount.value > 0) {
       showShieldDialogue.value = true;
       isPaused.value = true;
+      status = GameStatus.paused;
+      pauseEngine();
       overlays.add(shieldDialogueOverlay);
     } else {
       endGame();
@@ -253,6 +259,7 @@ class NightJumpGame extends FlameGame with HasCollisionDetection, TapCallbacks {
     showShieldDialogue.value = false;
     overlays.remove(shieldDialogueOverlay);
     isPaused.value = false;
+    status = GameStatus.playing;
     resumeEngine();
   }
 
