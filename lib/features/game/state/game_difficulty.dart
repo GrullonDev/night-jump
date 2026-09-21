@@ -19,7 +19,7 @@ extension GameDifficultyX on GameDifficulty {
   String get subtitle {
     switch (this) {
       case GameDifficulty.chill:
-        return 'Hueco amplio. 1 escudo al llegar a 15 puntos.';
+        return 'Hueco amplio. Minas, cohetes y escudos dinámicos.';
       case GameDifficulty.classic:
         return 'El ritmo original del juego.';
       case GameDifficulty.intense:
@@ -160,6 +160,80 @@ extension GameDifficultyX on GameDifficulty {
         return 5;
       case GameDifficulty.intense:
         return 5;
+    }
+  }
+
+  // ── Chill-Mode Hazard Config ──
+
+  /// Seconds between mine spawns (chill only, 0 = disabled).
+  double get mineSpawnInterval {
+    switch (this) {
+      case GameDifficulty.chill:
+        return 2.5;
+      case GameDifficulty.classic:
+        return 0;
+      case GameDifficulty.intense:
+        return 0;
+    }
+  }
+
+  /// Max mines on screen simultaneously (chill only).
+  int get maxMines {
+    switch (this) {
+      case GameDifficulty.chill:
+        return 5;
+      case GameDifficulty.classic:
+        return 0;
+      case GameDifficulty.intense:
+        return 0;
+    }
+  }
+
+  /// Seconds between rocket spawns (chill only, 0 = disabled).
+  double get rocketSpawnInterval {
+    switch (this) {
+      case GameDifficulty.chill:
+        return 3.5;
+      case GameDifficulty.classic:
+        return 0;
+      case GameDifficulty.intense:
+        return 0;
+    }
+  }
+
+  /// Max rockets on screen simultaneously (chill only).
+  int get maxRockets {
+    switch (this) {
+      case GameDifficulty.chill:
+        return 3;
+      case GameDifficulty.classic:
+        return 0;
+      case GameDifficulty.intense:
+        return 0;
+    }
+  }
+
+  /// Seconds between floating mine spawns (chill only, 0 = disabled).
+  double get floatingMineSpawnInterval {
+    switch (this) {
+      case GameDifficulty.chill:
+        return 4.0;
+      case GameDifficulty.classic:
+        return 0;
+      case GameDifficulty.intense:
+        return 0;
+    }
+  }
+
+  /// Max floating mines on screen simultaneously (chill only).
+  int get maxFloatingMines {
+    switch (this) {
+      case GameDifficulty.chill:
+        return 3;
+      case GameDifficulty.classic:
+        return 0;
+      case GameDifficulty.intense:
+        return 0;
     }
   }
 
