@@ -8,6 +8,7 @@ import 'package:night_jump/features/game/overlays/game_over_overlay.dart';
 import 'package:night_jump/features/game/overlays/hud_overlay.dart';
 import 'package:night_jump/features/game/overlays/menu_overlay.dart';
 import 'package:night_jump/features/game/overlays/pause_overlay.dart';
+import 'package:night_jump/features/game/overlays/shield_dialogue_overlay.dart';
 import 'package:night_jump/utils/theme/app_color.dart';
 
 class GamePage extends StatefulWidget {
@@ -47,6 +48,8 @@ class _GamePageState extends State<GamePage> {
                 CountdownOverlay(game: game),
             NightJumpGame.pauseOverlay: (context, game) =>
                 PauseOverlay(game: game),
+            NightJumpGame.shieldDialogueOverlay: (context, game) =>
+                ShieldDialogueOverlay(game: game),
           },
         ),
       ),

@@ -22,6 +22,9 @@ class OrbComponent extends PositionComponent
   double velocityY = 0;
   double _dangerRatio = 0;
   double _pulseTime = 0;
+  double _shieldPulseTime = 0;
+  bool _shieldFlashActive = false;
+  double _shieldFlashTimer = 0;
 
   OrbComponent()
     : super(size: Vector2.all(visualRadius * 2), anchor: Anchor.center);
@@ -36,6 +39,9 @@ class OrbComponent extends PositionComponent
     velocityY = 0;
     _dangerRatio = 0;
     _pulseTime = 0;
+    _shieldPulseTime = 0;
+    _shieldFlashActive = false;
+    _shieldFlashTimer = 0;
   }
 
   void jump() {
@@ -54,10 +60,29 @@ class OrbComponent extends PositionComponent
     velocityY += gravity * dt;
     position.y += velocityY * dt;
 
+    // Update shield pulse
+    if (game.shieldActive.value) {
+      _shieldPulseTime += dt * 4;
+    }
+
+    // Update shield flash effect
+    if (_shieldFlashActive) {
+      _shieldFlashTimer -= dt;
+      if (_shieldFlashTimer <= 0) {
+        _shieldFlashActive = false;
+      }
+    }
+
     if (position.y - visualRadius <= 0 ||
         position.y + visualRadius >= game.size.y) {
       position.y = position.y.clamp(visualRadius, game.size.y - visualRadius);
-      game.endGame();
+      if (game.shieldActive.value) {
+        game.deactivateShield();
+        _shieldFlashActive = true;
+        _shieldFlashTimer = 0.3;
+      } else {
+        game.endGame();
+      }
     } else {
       // Danger ratio (0.0 to 1.0) from proximity
       // to the top/bottom edges.
@@ -82,7 +107,16 @@ class OrbComponent extends PositionComponent
   ) {
     super.onCollisionStart(intersectionPoints, other);
     if (other is ObstacleComponent && game.status == GameStatus.playing) {
-      game.endGame();
+      if (game.shieldActive.value) {
+        // Shield absorbs the hit
+        game.deactivateShield();
+        _shieldFlashActive = true;
+        _shieldFlashTimer = 0.3;
+        game.sound.score();
+      } else {
+        // No shield - offer shield dialogue or end game
+        game.showShieldOffer();
+      }
     }
   }
 
@@ -92,6 +126,53 @@ class OrbComponent extends PositionComponent
     final palette = game.palette.value;
     final dimmed = game.comfortDim.value;
     final glowScale = dimmed ? 0.55 : 1.0;
+
+    // Shield halo effect
+    if (game.shieldActive.value) {
+      final shieldPulse = 0.7 + 0.3 * sin(_shieldPulseTime);
+      final shieldRadius = visualRadius * 2.0 * shieldPulse;
+      
+      // Outer shield glow
+      canvas.drawCircle(
+        center,
+        shieldRadius,
+        Paint()
+          ..color = AppColor.shieldCyan.withValues(alpha: 0.2 * shieldPulse)
+          ..maskFilter = MaskFilter.blur(BlurStyle.normal, dimmed ? 15 : 22),
+      );
+
+      // Inner shield ring
+      final shieldRingPaint = Paint()
+        ..color = AppColor.shieldCyan.withValues(alpha: 0.6 * shieldPulse)
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 2.5;
+      canvas.drawCircle(center, visualRadius * 1.5, shieldRingPaint);
+
+      // Shield energy particles
+      for (int i = 0; i < 6; i++) {
+        final angle = (i * 2 * pi / 6) + _shieldPulseTime * 0.5;
+        final particleDist = visualRadius * 1.7;
+        final particleX = center.dx + particleDist * cos(angle);
+        final particleY = center.dy + particleDist * sin(angle);
+        canvas.drawCircle(
+          Offset(particleX, particleY),
+          2 * shieldPulse,
+          Paint()..color = AppColor.shieldCyan.withValues(alpha: 0.8 * shieldPulse),
+        );
+      }
+    }
+
+    // Shield flash effect
+    if (_shieldFlashActive) {
+      final flashAlpha = _shieldFlashTimer / 0.3;
+      canvas.drawCircle(
+        center,
+        visualRadius * 2.5,
+        Paint()
+          ..color = AppColor.shieldCyan.withValues(alpha: 0.5 * flashAlpha)
+          ..maskFilter = MaskFilter.blur(BlurStyle.normal, 20),
+      );
+    }
 
     // Orb body follows the selected palette: secondary core
     // blending out to primary.

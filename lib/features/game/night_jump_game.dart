@@ -7,6 +7,7 @@ import 'package:flame/game.dart';
 
 import 'package:night_jump/features/game/components/obstacle_component.dart';
 import 'package:night_jump/features/game/components/orb_component.dart';
+import 'package:night_jump/features/game/components/shield_gem_component.dart';
 import 'package:night_jump/features/game/components/starfield_component.dart';
 import 'package:night_jump/features/game/state/game_difficulty.dart';
 import 'package:night_jump/features/game/state/game_status.dart';
@@ -33,6 +34,7 @@ class NightJumpGame extends FlameGame with HasCollisionDetection, TapCallbacks {
   static const String gameOverOverlay = 'gameOver';
   static const String countdownOverlay = 'countdown';
   static const String pauseOverlay = 'pause';
+  static const String shieldDialogueOverlay = 'shieldDialogue';
 
   final ScoreRepository scoreRepository;
   final MissionsRepository missionsRepository;
@@ -55,6 +57,16 @@ class NightJumpGame extends FlameGame with HasCollisionDetection, TapCallbacks {
     NeonPalette.catalog.first,
   );
   final ValueNotifier<bool> comfortDim = ValueNotifier<bool>(false);
+
+  // ── Shield System ──
+  final ValueNotifier<int> shieldCount = ValueNotifier<int>(0);
+  final ValueNotifier<bool> shieldActive = ValueNotifier<bool>(false);
+  final ValueNotifier<bool> showShieldDialogue = ValueNotifier<bool>(false);
+  int _obstaclesSinceLastGem = 0;
+  bool _chillShieldGranted = false;
+
+  // ── Run Stats ──
+  final ValueNotifier<int> dustEarnedThisRun = ValueNotifier<int>(0);
 
   late final SoundService sound = SoundService(
     isEnabled: () => soundEnabled.value,
@@ -114,16 +126,26 @@ class NightJumpGame extends FlameGame with HasCollisionDetection, TapCallbacks {
     isNewHighScore.value = false;
     isPaused.value = false;
     flightTime.value = Duration.zero;
+    dustEarnedThisRun.value = 0;
     _spawnTimer = 0;
     _flightSeconds = 0;
+    _obstaclesSinceLastGem = 0;
+    _chillShieldGranted = false;
+    shieldCount.value = difficulty.value.startingShields;
+    shieldActive.value = false;
+    showShieldDialogue.value = false;
 
     children.whereType<ObstacleComponent>().toList().forEach(
       (obstacle) => obstacle.removeFromParent(),
+    );
+    children.whereType<ShieldGemComponent>().toList().forEach(
+      (gem) => gem.removeFromParent(),
     );
     orb.reset();
 
     overlays.remove(menuOverlay);
     overlays.remove(gameOverOverlay);
+    overlays.remove(shieldDialogueOverlay);
     overlays.add(hudOverlay);
     overlays.add(countdownOverlay);
     resumeEngine();
@@ -138,7 +160,80 @@ class NightJumpGame extends FlameGame with HasCollisionDetection, TapCallbacks {
 
   void addScore() {
     score.value++;
+    dustEarnedThisRun.value++;
     sound.score();
+    // Award 1 dust per obstacle cleared
+    missionsRepository.addDust(1);
+
+    // Chill mode: auto-grant shield at score threshold
+    final threshold = difficulty.value.shieldScoreThreshold;
+    if (threshold > 0 &&
+        !_chillShieldGranted &&
+        score.value >= threshold &&
+        shieldCount.value < difficulty.value.maxShields) {
+      _chillShieldGranted = true;
+      shieldCount.value = 1;
+      sound.score();
+    }
+  }
+
+  // ── Shield Methods ──
+
+  void useShield() {
+    if (shieldCount.value > 0 && !shieldActive.value) {
+      shieldCount.value--;
+      shieldActive.value = true;
+      showShieldDialogue.value = false;
+      overlays.remove(shieldDialogueOverlay);
+      isPaused.value = false;
+      resumeEngine();
+      sound.ui();
+    }
+  }
+
+  void activateShieldFromGem() {
+    if (!shieldActive.value) {
+      shieldActive.value = true;
+      sound.score();
+    }
+  }
+
+  void deactivateShield() {
+    shieldActive.value = false;
+  }
+
+  void collectGem() {
+    if (shieldCount.value < difficulty.value.maxShields) {
+      shieldCount.value++;
+    }
+    activateShieldFromGem();
+  }
+
+  void onObstacleCleared() {
+    // Reserved for future use
+  }
+
+  void showShieldOffer() {
+    if (shieldCount.value > 0 && !showShieldDialogue.value) {
+      showShieldDialogue.value = true;
+      isPaused.value = true;
+      overlays.add(shieldDialogueOverlay);
+    } else {
+      endGame();
+    }
+  }
+
+  void dismissShieldDialogue() {
+    showShieldDialogue.value = false;
+    overlays.remove(shieldDialogueOverlay);
+    isPaused.value = false;
+    resumeEngine();
+  }
+
+  void rejectShield() {
+    showShieldDialogue.value = false;
+    overlays.remove(shieldDialogueOverlay);
+    endGame();
   }
 
   Future<void> toggleSound() async {
@@ -193,6 +288,7 @@ class NightJumpGame extends FlameGame with HasCollisionDetection, TapCallbacks {
     isPaused.value = false;
     pauseEngine();
     overlays.remove(hudOverlay);
+    overlays.remove(shieldDialogueOverlay);
     sound.gameOver();
 
     final beatHighScore = await scoreRepository.saveScoreIfHigh(score.value);
@@ -209,10 +305,16 @@ class NightJumpGame extends FlameGame with HasCollisionDetection, TapCallbacks {
     children.whereType<ObstacleComponent>().toList().forEach(
       (obstacle) => obstacle.removeFromParent(),
     );
+    children.whereType<ShieldGemComponent>().toList().forEach(
+      (gem) => gem.removeFromParent(),
+    );
+    shieldActive.value = false;
+    showShieldDialogue.value = false;
     orb.reset();
     overlays.remove(gameOverOverlay);
     overlays.remove(hudOverlay);
     overlays.remove(pauseOverlay);
+    overlays.remove(shieldDialogueOverlay);
     overlays.add(menuOverlay);
     pauseEngine();
   }
@@ -245,17 +347,54 @@ class NightJumpGame extends FlameGame with HasCollisionDetection, TapCallbacks {
     _spawnTimer += dt;
     if (_spawnTimer >= currentSpawnInterval) {
       _spawnTimer = 0;
-      add(
-        ObstacleComponent(
-          startX: size.x + ObstacleComponent.barWidth,
-          screenHeight: size.y,
-          random: random,
-          // Gap fixed per difficulty for the whole run: ramping never
-          // punishes base skill, only speed and frequency rise.
-          gapHeight: difficulty.value.gapHeight,
-        ),
+      final obstacle = ObstacleComponent(
+        startX: size.x + ObstacleComponent.barWidth,
+        screenHeight: size.y,
+        random: random,
+        gapHeight: difficulty.value.gapHeight,
       );
+      add(obstacle);
+
+      // Gem spawning (classic/intense only)
+      final diff = difficulty.value;
+      if (diff.gemSpawnInterval > 0) {
+        _obstaclesSinceLastGem++;
+        final firstThreshold = diff.gemSpawnAfterFirst;
+        final interval = diff.gemSpawnInterval;
+
+        bool shouldSpawn = false;
+        if (_obstaclesSinceLastGem == firstThreshold) {
+          shouldSpawn = true;
+        } else if (_obstaclesSinceLastGem > firstThreshold &&
+            (_obstaclesSinceLastGem - firstThreshold) % interval == 0) {
+          shouldSpawn = true;
+        }
+
+        if (shouldSpawn &&
+            shieldCount.value < diff.maxShields &&
+            children.whereType<ShieldGemComponent>().length < 2) {
+          _spawnGemInGap(obstacle);
+        }
+      }
     }
+  }
+
+  void _spawnGemInGap(ObstacleComponent obstacle) {
+    final minX = obstacle.position.x + ObstacleComponent.barWidth + 40;
+    final maxX = obstacle.position.x + ObstacleComponent.barWidth + 120;
+    final gemX = minX + random.nextDouble() * (maxX - minX);
+
+    final gapTop = obstacle.gapCenterY - obstacle.gapHeight / 2;
+    final gapBottom = obstacle.gapCenterY + obstacle.gapHeight / 2;
+    final margin = 30.0;
+    final gemY =
+        gapTop + margin + random.nextDouble() * (gapBottom - gapTop - margin * 2);
+
+    add(
+      ShieldGemComponent(
+        position: Vector2(gemX, gemY),
+      ),
+    );
   }
 
   @override
