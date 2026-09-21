@@ -62,8 +62,12 @@ class GameOverOverlay extends StatelessWidget {
                         fontFamily: 'Space Grotesk',
                       ),
                     ),
-                    const SizedBox(height: 28),
-                    _SummaryCard(game: game),
+                    const SizedBox(height: 24),
+                    _ScoreSection(game: game),
+                    const SizedBox(height: 16),
+                    _DustBadge(game: game),
+                    const SizedBox(height: 16),
+                    _StatsRow(game: game),
                     const SizedBox(height: 28),
                     _PrimaryButton(
                       label: 'REINTENTAR',
@@ -73,8 +77,15 @@ class GameOverOverlay extends StatelessWidget {
                     ),
                     const SizedBox(height: 12),
                     _PrimaryButton(
-                      label: 'MENÚ PRINCIPAL',
-                      icon: Icons.home_rounded,
+                      label: 'NUEVO JUEGO',
+                      icon: Icons.play_arrow_rounded,
+                      color: AppColor.electricCyan,
+                      onTap: game.startGame,
+                    ),
+                    const SizedBox(height: 12),
+                    _PrimaryButton(
+                      label: 'INICIO',
+                      icon: Icons.play_arrow_rounded,
                       color: AppColor.electricCyan,
                       onTap: game.returnToMenu,
                     ),
@@ -120,18 +131,18 @@ class _StatusBadge extends StatelessWidget {
   }
 }
 
-class _SummaryCard extends StatelessWidget {
-  const _SummaryCard({required this.game});
+class _ScoreSection extends StatelessWidget {
+  const _ScoreSection({required this.game});
 
   final NightJumpGame game;
 
   @override
   Widget build(BuildContext context) {
-    final cardPadding = context.responsive(mobile: 20.0, tablet: 28.0);
     final scoreFontSize = context.responsive(mobile: 56.0, tablet: 68.0);
 
     return Container(
-      padding: EdgeInsets.symmetric(vertical: 24, horizontal: cardPadding),
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(vertical: 24),
       decoration: BoxDecoration(
         color: AppColor.hudGlass.withValues(alpha: 0.6),
         borderRadius: BorderRadius.circular(20),
@@ -177,7 +188,7 @@ class _SummaryCard extends StatelessWidget {
               ),
             ),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 12),
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
@@ -204,34 +215,159 @@ class _SummaryCard extends StatelessWidget {
               ),
             ],
           ),
-          const SizedBox(height: 20),
-          Row(
-            children: [
-              Expanded(
-                child: ValueListenableBuilder<int>(
-                  valueListenable: game.score,
-                  builder: (context, score, _) => _StatTile(
-                    icon: Icons.flight_takeoff_rounded,
-                    label: 'SUPERADOS',
-                    value: '$score obstáculos',
-                  ),
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: ValueListenableBuilder<Duration>(
-                  valueListenable: game.flightTime,
-                  builder: (context, time, _) => _StatTile(
-                    icon: Icons.timer_rounded,
-                    label: 'TIEMPO VUELO',
-                    value: _formatDuration(time),
-                  ),
-                ),
+        ],
+      ),
+    );
+  }
+}
+
+class _DustBadge extends StatelessWidget {
+  const _DustBadge({required this.game});
+
+  final NightJumpGame game;
+
+  @override
+  Widget build(BuildContext context) {
+    return ValueListenableBuilder<int>(
+      valueListenable: game.dustEarnedThisRun,
+      builder: (context, dust, _) {
+        return Container(
+          width: double.infinity,
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [
+                AppColor.hudGlass.withValues(alpha: 0.7),
+                AppColor.deepNavy.withValues(alpha: 0.8),
+              ],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: AppColor.neonRose.withValues(alpha: 0.3)),
+            boxShadow: [
+              BoxShadow(
+                color: AppColor.neonRose.withValues(alpha: 0.15),
+                blurRadius: 16,
+                spreadRadius: 1,
               ),
             ],
           ),
-        ],
-      ),
+          child: Row(
+            children: [
+              // Glowing dust icon
+              Container(
+                width: 44,
+                height: 44,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: AppColor.neonRose.withValues(alpha: 0.15),
+                  boxShadow: [
+                    BoxShadow(
+                      color: AppColor.neonRose.withValues(alpha: 0.3),
+                      blurRadius: 12,
+                      spreadRadius: 2,
+                    ),
+                  ],
+                ),
+                child: Icon(
+                  Icons.auto_awesome_rounded,
+                  color: AppColor.neonRose,
+                  size: 22,
+                ),
+              ),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'POLVOS RECIBIDOS',
+                      style: TextStyle(
+                        color: AppColor.slateGlow,
+                        fontSize: 10,
+                        fontWeight: FontWeight.w600,
+                        letterSpacing: 0.12,
+                        fontFamily: 'Space Grotesk',
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Row(
+                      children: [
+                        Text(
+                          '+$dust',
+                          style: TextStyle(
+                            color: AppColor.neonRose,
+                            fontSize: 24,
+                            fontWeight: FontWeight.w800,
+                            fontFamily: 'Sora',
+                            shadows: [
+                              Shadow(
+                                color: AppColor.neonRose.withValues(alpha: 0.5),
+                                blurRadius: 10,
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          'polvos',
+                          style: TextStyle(
+                            color: AppColor.slateWhite,
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                            fontFamily: 'Space Grotesk',
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+              Icon(
+                Icons.chevron_right_rounded,
+                color: AppColor.slateGlow.withValues(alpha: 0.5),
+                size: 20,
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _StatsRow extends StatelessWidget {
+  const _StatsRow({required this.game});
+
+  final NightJumpGame game;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Expanded(
+          child: ValueListenableBuilder<int>(
+            valueListenable: game.score,
+            builder: (context, score, _) => _StatTile(
+              icon: Icons.flight_takeoff_rounded,
+              label: 'SUPERADOS',
+              value: '$score obstáculos',
+            ),
+          ),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: ValueListenableBuilder<Duration>(
+            valueListenable: game.flightTime,
+            builder: (context, time, _) => _StatTile(
+              icon: Icons.timer_rounded,
+              label: 'TIEMPO VUELO',
+              value: _formatDuration(time),
+            ),
+          ),
+        ),
+      ],
     );
   }
 
