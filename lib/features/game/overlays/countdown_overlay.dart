@@ -30,37 +30,39 @@ class _CountdownOverlayState extends State<CountdownOverlay>
   @override
   void initState() {
     super.initState();
-    _controller = AnimationController(
-      vsync: this,
-      duration: _stepDuration,
-    );
+    _controller = AnimationController(vsync: this, duration: _stepDuration);
 
     _scale = TweenSequence<double>([
       TweenSequenceItem(
-        tween: Tween(begin: 0.55, end: 1.1)
-            .chain(CurveTween(curve: Curves.easeOutBack)),
+        tween: Tween(
+          begin: 0.55,
+          end: 1.1,
+        ).chain(CurveTween(curve: Curves.easeOutBack)),
         weight: 55,
       ),
       TweenSequenceItem(
-        tween: Tween(begin: 1.1, end: 0.9)
-            .chain(CurveTween(curve: Curves.easeIn)),
+        tween: Tween(
+          begin: 1.1,
+          end: 0.9,
+        ).chain(CurveTween(curve: Curves.easeIn)),
         weight: 45,
       ),
     ]).animate(_controller);
 
     _opacity = TweenSequence<double>([
       TweenSequenceItem(
-        tween: Tween(begin: 0.0, end: 1.0)
-            .chain(CurveTween(curve: Curves.easeOut)),
+        tween: Tween(
+          begin: 0.0,
+          end: 1.0,
+        ).chain(CurveTween(curve: Curves.easeOut)),
         weight: 30,
       ),
+      TweenSequenceItem(tween: ConstantTween(1.0), weight: 45),
       TweenSequenceItem(
-        tween: ConstantTween(1.0),
-        weight: 45,
-      ),
-      TweenSequenceItem(
-        tween: Tween(begin: 1.0, end: 0.0)
-            .chain(CurveTween(curve: Curves.easeIn)),
+        tween: Tween(
+          begin: 1.0,
+          end: 0.0,
+        ).chain(CurveTween(curve: Curves.easeIn)),
         weight: 25,
       ),
     ]).animate(_controller);

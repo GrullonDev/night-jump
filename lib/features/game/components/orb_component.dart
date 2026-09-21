@@ -1,4 +1,5 @@
 import 'dart:math';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -22,7 +23,8 @@ class OrbComponent extends PositionComponent
   double _dangerRatio = 0;
   double _pulseTime = 0;
 
-  OrbComponent() : super(size: Vector2.all(visualRadius * 2), anchor: Anchor.center);
+  OrbComponent()
+    : super(size: Vector2.all(visualRadius * 2), anchor: Anchor.center);
 
   @override
   Future<void> onLoad() async {
@@ -52,7 +54,8 @@ class OrbComponent extends PositionComponent
     velocityY += gravity * dt;
     position.y += velocityY * dt;
 
-    if (position.y - visualRadius <= 0 || position.y + visualRadius >= game.size.y) {
+    if (position.y - visualRadius <= 0 ||
+        position.y + visualRadius >= game.size.y) {
       position.y = position.y.clamp(visualRadius, game.size.y - visualRadius);
       game.endGame();
     } else {
@@ -101,10 +104,20 @@ class OrbComponent extends PositionComponent
         _dangerRatio,
       )!;
 
-      baseGlow = dangerColor.withValues(alpha: 0.35 + (0.2 * _dangerRatio * pulseFactor));
+      baseGlow = dangerColor.withValues(
+        alpha: 0.35 + (0.2 * _dangerRatio * pulseFactor),
+      );
       centerGradient = dangerColor;
-      midGradient = Color.lerp(AppColor.neonRose, AppColor.errorContainer, _dangerRatio)!;
-      outerGradient = Color.lerp(AppColor.secondaryContainer, AppColor.error, _dangerRatio)!;
+      midGradient = Color.lerp(
+        AppColor.neonRose,
+        AppColor.errorContainer,
+        _dangerRatio,
+      )!;
+      outerGradient = Color.lerp(
+        AppColor.secondaryContainer,
+        AppColor.error,
+        _dangerRatio,
+      )!;
     }
 
     canvas.drawCircle(
@@ -129,7 +142,10 @@ class OrbComponent extends PositionComponent
     );
 
     canvas.drawCircle(
-      Offset(visualRadius - visualRadius * 0.35, visualRadius - visualRadius * 0.35),
+      Offset(
+        visualRadius - visualRadius * 0.35,
+        visualRadius - visualRadius * 0.35,
+      ),
       visualRadius * 0.3,
       Paint()..color = const Color(0xCCFFFFFF),
     );

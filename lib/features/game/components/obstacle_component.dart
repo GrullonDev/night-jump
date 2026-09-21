@@ -28,7 +28,7 @@ class ObstacleComponent extends PositionComponent
     double? gapHeight,
   }) : gapHeight = gapHeight ?? defaultGapHeight,
        gapCenterY =
-            _edgeMargin + random.nextDouble() * (screenHeight - 2 * _edgeMargin),
+           _edgeMargin + random.nextDouble() * (screenHeight - 2 * _edgeMargin),
        super(position: Vector2(startX, 0), size: Vector2(barWidth, 0));
 
   @override

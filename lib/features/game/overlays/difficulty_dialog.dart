@@ -14,10 +14,8 @@ Future<void> showDifficultyDialog(
   return showDialog<void>(
     context: context,
     barrierDismissible: true,
-    builder: (context) => _DifficultyDialog(
-      current: current,
-      onSelected: onSelected,
-    ),
+    builder: (context) =>
+        _DifficultyDialog(current: current, onSelected: onSelected),
   );
 }
 

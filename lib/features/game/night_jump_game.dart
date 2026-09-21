@@ -38,9 +38,8 @@ class NightJumpGame extends FlameGame with HasCollisionDetection, TapCallbacks {
   final ValueNotifier<int> score = ValueNotifier<int>(0);
   final ValueNotifier<int> highScore = ValueNotifier<int>(0);
   final ValueNotifier<bool> isNewHighScore = ValueNotifier<bool>(false);
-  final ValueNotifier<GameDifficulty> difficulty = ValueNotifier<GameDifficulty>(
-    GameDifficulty.classic,
-  );
+  final ValueNotifier<GameDifficulty> difficulty =
+      ValueNotifier<GameDifficulty>(GameDifficulty.classic);
   final ValueNotifier<bool> isPaused = ValueNotifier<bool>(false);
   final ValueNotifier<Duration> flightTime = ValueNotifier<Duration>(
     Duration.zero,
@@ -64,7 +63,8 @@ class NightJumpGame extends FlameGame with HasCollisionDetection, TapCallbacks {
   static const double _rampTimeConstant = 18.0;
 
   static double _rampFactor(double seconds) {
-    const divisor = 1.791759; // ln(1 + 90/18) = ln(6), i.e. factor hits 1.0 at ~90s
+    const divisor =
+        1.791759; // ln(1 + 90/18) = ln(6), i.e. factor hits 1.0 at ~90s
     final factor = log(1 + seconds / _rampTimeConstant) / divisor;
     return factor.clamp(0.0, 1.0);
   }
