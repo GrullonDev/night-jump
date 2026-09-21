@@ -30,7 +30,7 @@ extension GameDifficultyX on GameDifficulty {
   double get obstacleSpeed {
     switch (this) {
       case GameDifficulty.chill:
-        return 130;
+        return 140;
       case GameDifficulty.classic:
         return 180;
       case GameDifficulty.intense:
@@ -41,7 +41,7 @@ extension GameDifficultyX on GameDifficulty {
   double get spawnInterval {
     switch (this) {
       case GameDifficulty.chill:
-        return 2.0;
+        return 1.8;
       case GameDifficulty.classic:
         return 1.6;
       case GameDifficulty.intense:
@@ -52,11 +52,51 @@ extension GameDifficultyX on GameDifficulty {
   double get gapHeight {
     switch (this) {
       case GameDifficulty.chill:
-        return 250;
+        return 220;
       case GameDifficulty.classic:
         return 190;
       case GameDifficulty.intense:
         return 170;
+    }
+  }
+
+  // ── Difficulty Ramp Multipliers ──
+  // Controls how strongly the 90-second logarithmic ramp affects each
+  // difficulty. 1.0 = full ramp (Classic baseline), <1.0 = gentler.
+
+  /// Max additional scroll speed added by the ramp (base + this at 90s).
+  double get rampSpeedDelta {
+    switch (this) {
+      case GameDifficulty.chill:
+        return 60;
+      case GameDifficulty.classic:
+        return 100;
+      case GameDifficulty.intense:
+        return 100;
+    }
+  }
+
+  /// Max spawn interval reduction from the ramp (base − this at 90s).
+  double get rampSpawnDelta {
+    switch (this) {
+      case GameDifficulty.chill:
+        return 0.3;
+      case GameDifficulty.classic:
+        return 0.5;
+      case GameDifficulty.intense:
+        return 0.5;
+    }
+  }
+
+  /// Minimum spawn interval clamp (floor the ramp can't go below).
+  double get minSpawnInterval {
+    switch (this) {
+      case GameDifficulty.chill:
+        return 1.2;
+      case GameDifficulty.classic:
+        return 0.9;
+      case GameDifficulty.intense:
+        return 0.7;
     }
   }
 

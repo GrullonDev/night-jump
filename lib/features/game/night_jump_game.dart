@@ -90,14 +90,16 @@ class NightJumpGame extends FlameGame with HasCollisionDetection, TapCallbacks {
     return factor.clamp(0.0, 1.0);
   }
 
-  /// Scroll speed: difficulty base + up to +100 (classic 180 → 280).
+  /// Scroll speed: difficulty base + difficulty-specific ramp delta.
   double get currentObstacleSpeed =>
-      difficulty.value.obstacleSpeed + 100 * _rampFactor(_flightSeconds);
+      difficulty.value.obstacleSpeed +
+      difficulty.value.rampSpeedDelta * _rampFactor(_flightSeconds);
 
-  /// Spawn gap: difficulty base down to −0.5s (classic 1.6 → 1.1s).
+  /// Spawn gap: difficulty base − difficulty-specific ramp delta.
   double get currentSpawnInterval =>
-      (difficulty.value.spawnInterval - 0.5 * _rampFactor(_flightSeconds))
-          .clamp(0.9, 4.0);
+      (difficulty.value.spawnInterval -
+              difficulty.value.rampSpawnDelta * _rampFactor(_flightSeconds))
+          .clamp(difficulty.value.minSpawnInterval, 4.0);
 
   @override
   Future<void> onLoad() async {
