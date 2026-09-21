@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'package:night_jump/features/game/night_jump_game.dart';
+import 'package:night_jump/features/game/overlays/soft_entrance.dart';
 import 'package:night_jump/utils/responsive/responsive_extension.dart';
 import 'package:night_jump/utils/theme/app_color.dart';
 
@@ -18,47 +19,49 @@ class PauseOverlay extends StatelessWidget {
       color: AppColor.canvasBase.withValues(alpha: 0.9),
       child: SafeArea(
         child: Center(
-          child: ConstrainedBox(
-            constraints: BoxConstraints(maxWidth: maxWidth),
-            child: SingleChildScrollView(
-              padding: EdgeInsets.symmetric(
-                horizontal: horizontalPadding,
-                vertical: 24,
-              ),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    'PAUSA',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      color: AppColor.electricCyan,
-                      fontSize: 40.0,
-                      fontWeight: FontWeight.w800,
-                      fontFamily: 'Sora',
-                      shadows: [
-                        Shadow(
-                          color: AppColor.electricCyan.withValues(alpha: 0.5),
-                          blurRadius: 20,
-                        ),
-                      ],
+          child: SoftEntrance(
+            child: ConstrainedBox(
+              constraints: BoxConstraints(maxWidth: maxWidth),
+              child: SingleChildScrollView(
+                padding: EdgeInsets.symmetric(
+                  horizontal: horizontalPadding,
+                  vertical: 24,
+                ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      'PAUSA',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        color: AppColor.electricCyan,
+                        fontSize: 40.0,
+                        fontWeight: FontWeight.w800,
+                        fontFamily: 'Sora',
+                        shadows: [
+                          Shadow(
+                            color: AppColor.electricCyan.withValues(alpha: 0.5),
+                            blurRadius: 20,
+                          ),
+                        ],
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 40),
-                  _PrimaryButton(
-                    label: 'CONTINUAR',
-                    icon: Icons.play_arrow_rounded,
-                    color: AppColor.electricCyan,
-                    onTap: game.resumeGame,
-                  ),
-                  const SizedBox(height: 12),
-                  _PrimaryButton(
-                    label: 'MENÚ PRINCIPAL',
-                    icon: Icons.home_rounded,
-                    color: AppColor.surfaceContainerHighest,
-                    onTap: game.returnToMenu,
-                  ),
-                ],
+                    const SizedBox(height: 40),
+                    _PrimaryButton(
+                      label: 'CONTINUAR',
+                      icon: Icons.play_arrow_rounded,
+                      color: AppColor.electricCyan,
+                      onTap: game.resumeGame,
+                    ),
+                    const SizedBox(height: 12),
+                    _PrimaryButton(
+                      label: 'MENÚ PRINCIPAL',
+                      icon: Icons.home_rounded,
+                      color: AppColor.surfaceContainerHighest,
+                      onTap: game.returnToMenu,
+                    ),
+                  ],
+                ),
               ),
             ),
           ),
