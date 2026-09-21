@@ -58,9 +58,7 @@ class HudOverlay extends StatelessWidget {
                   builder: (context, paused, _) {
                     return IconButton(
                       icon: Icon(
-                        paused
-                            ? Icons.play_arrow_rounded
-                            : Icons.pause_rounded,
+                        paused ? Icons.play_arrow_rounded : Icons.pause_rounded,
                         color: AppColor.electricCyan,
                         size: 32,
                       ),

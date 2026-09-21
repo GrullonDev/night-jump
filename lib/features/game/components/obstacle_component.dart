@@ -6,7 +6,6 @@ import 'package:flame/components.dart';
 
 import 'package:night_jump/features/game/night_jump_game.dart';
 import 'package:night_jump/features/game/state/game_status.dart';
-import 'package:night_jump/utils/theme/app_color.dart';
 
 /// A pair of neon bars (top/bottom) with a gap the orb must pass through.
 /// Scrolls right-to-left and awards a point once the orb clears it.
@@ -28,7 +27,7 @@ class ObstacleComponent extends PositionComponent
     double? gapHeight,
   }) : gapHeight = gapHeight ?? defaultGapHeight,
        gapCenterY =
-            _edgeMargin + random.nextDouble() * (screenHeight - 2 * _edgeMargin),
+           _edgeMargin + random.nextDouble() * (screenHeight - 2 * _edgeMargin),
        super(position: Vector2(startX, 0), size: Vector2(barWidth, 0));
 
   @override
@@ -67,10 +66,13 @@ class ObstacleComponent extends PositionComponent
 
   @override
   void render(Canvas canvas) {
-    final paint = Paint()
-      ..color = AppColor.electricCyan.withValues(alpha: 0.85);
+    // Bars follow the selected palette's primary; comfort mode
+    // softens the halo so long sessions stay easy on the eyes.
+    final barColor = game.palette.value.primary;
+    final glowAlpha = game.comfortDim.value ? 0.18 : 0.35;
+    final paint = Paint()..color = barColor.withValues(alpha: 0.85);
     final glowPaint = Paint()
-      ..color = AppColor.electricCyan.withValues(alpha: 0.35)
+      ..color = barColor.withValues(alpha: glowAlpha)
       ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 14);
 
     final topRect = Rect.fromLTWH(0, 0, barWidth, gapCenterY - gapHeight / 2);

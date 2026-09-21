@@ -7,6 +7,7 @@ class SettingsRepository {
   static const _hapticsEnabledKey = 'settings.haptics_enabled';
   static const _howToPlaySeenKey = 'settings.how_to_play_seen';
   static const _difficultyKey = 'settings.difficulty';
+  static const _comfortDimKey = 'settings.comfort_dim';
 
   Future<bool> getSoundEnabled() async {
     final prefs = await SharedPreferences.getInstance();
@@ -43,6 +44,16 @@ class SettingsRepository {
     await prefs.setString(_difficultyKey, id);
   }
 
+  Future<bool> getComfortDim() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_comfortDimKey) ?? false;
+  }
+
+  Future<void> setComfortDim(bool value) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_comfortDimKey, value);
+  }
+
   Future<void> setHapticsEnabled(bool value) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool(_hapticsEnabledKey, value);
@@ -58,6 +69,7 @@ class SettingsRepository {
       _hapticsEnabledKey,
       _howToPlaySeenKey,
       _difficultyKey,
+      _comfortDimKey,
     };
     for (final key in prefs.getKeys()) {
       if (!keysToKeep.contains(key)) {

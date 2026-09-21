@@ -8,9 +8,7 @@ class HomePage extends StatelessWidget {
     super.key,
     this.onTapToPlay,
     this.highScore = 0,
-    this.onTapRetos,
     this.onTapPalette,
-    this.onTapRanking,
     this.onTapSound,
     this.soundEnabled = true,
     this.onTapSettings,
@@ -20,11 +18,7 @@ class HomePage extends StatelessWidget {
   final VoidCallback? onTapToPlay;
   final int highScore;
 
-  final VoidCallback? onTapRetos;
-
   final VoidCallback? onTapPalette;
-
-  final VoidCallback? onTapRanking;
 
   final VoidCallback? onTapSound;
 
@@ -52,9 +46,7 @@ class HomePage extends StatelessWidget {
         child: HomeLayout(
           onTapToPlay: onTapToPlay,
           highScore: highScore,
-          onTapRetos: onTapRetos,
           onTapPalette: onTapPalette,
-          onTapRanking: onTapRanking,
           onTapSound: onTapSound,
           soundEnabled: soundEnabled,
           onTapSettings: onTapSettings,

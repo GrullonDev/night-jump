@@ -26,41 +26,49 @@ class _CountdownOverlayState extends State<CountdownOverlay>
   static const _stepDuration = Duration(milliseconds: 850);
 
   int _stepIndex = 0;
+  bool _ready = false;
 
   @override
-  void initState() {
-    super.initState();
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // MediaQuery (and any inherited widget) must not be read in
+    // initState; this runs after initState and before the first build.
+    if (_ready) return;
+    _ready = true;
+
+    // Calm entrance: small fade + settle, no overshoot. With reduced
+    // motion the steps complete instantly so the wait disappears too.
+    final reduceMotion = MediaQuery.disableAnimationsOf(context);
     _controller = AnimationController(
       vsync: this,
-      duration: _stepDuration,
+      duration: reduceMotion ? Duration.zero : _stepDuration,
     );
 
     _scale = TweenSequence<double>([
       TweenSequenceItem(
-        tween: Tween(begin: 0.55, end: 1.1)
-            .chain(CurveTween(curve: Curves.easeOutBack)),
-        weight: 55,
+        tween: Tween(
+          begin: 0.85,
+          end: 1.0,
+        ).chain(CurveTween(curve: Curves.easeOutCubic)),
+        weight: 60,
       ),
-      TweenSequenceItem(
-        tween: Tween(begin: 1.1, end: 0.9)
-            .chain(CurveTween(curve: Curves.easeIn)),
-        weight: 45,
-      ),
+      TweenSequenceItem(tween: ConstantTween(1.0), weight: 40),
     ]).animate(_controller);
 
     _opacity = TweenSequence<double>([
       TweenSequenceItem(
-        tween: Tween(begin: 0.0, end: 1.0)
-            .chain(CurveTween(curve: Curves.easeOut)),
+        tween: Tween(
+          begin: 0.0,
+          end: 1.0,
+        ).chain(CurveTween(curve: Curves.easeOut)),
         weight: 30,
       ),
+      TweenSequenceItem(tween: ConstantTween(1.0), weight: 45),
       TweenSequenceItem(
-        tween: ConstantTween(1.0),
-        weight: 45,
-      ),
-      TweenSequenceItem(
-        tween: Tween(begin: 1.0, end: 0.0)
-            .chain(CurveTween(curve: Curves.easeIn)),
+        tween: Tween(
+          begin: 1.0,
+          end: 0.0,
+        ).chain(CurveTween(curve: Curves.easeIn)),
         weight: 25,
       ),
     ]).animate(_controller);
@@ -114,12 +122,12 @@ class _CountdownOverlayState extends State<CountdownOverlay>
                     fontFamily: 'Sora',
                     shadows: [
                       Shadow(
-                        color: glowColor.withValues(alpha: 0.8),
-                        blurRadius: 40,
+                        color: glowColor.withValues(alpha: 0.5),
+                        blurRadius: 24,
                       ),
                       Shadow(
-                        color: glowColor.withValues(alpha: 0.4),
-                        blurRadius: 80,
+                        color: glowColor.withValues(alpha: 0.25),
+                        blurRadius: 48,
                       ),
                     ],
                   ),

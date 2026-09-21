@@ -1,4 +1,5 @@
 import 'dart:math';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -22,7 +23,8 @@ class OrbComponent extends PositionComponent
   double _dangerRatio = 0;
   double _pulseTime = 0;
 
-  OrbComponent() : super(size: Vector2.all(visualRadius * 2), anchor: Anchor.center);
+  OrbComponent()
+    : super(size: Vector2.all(visualRadius * 2), anchor: Anchor.center);
 
   @override
   Future<void> onLoad() async {
@@ -52,11 +54,13 @@ class OrbComponent extends PositionComponent
     velocityY += gravity * dt;
     position.y += velocityY * dt;
 
-    if (position.y - visualRadius <= 0 || position.y + visualRadius >= game.size.y) {
+    if (position.y - visualRadius <= 0 ||
+        position.y + visualRadius >= game.size.y) {
       position.y = position.y.clamp(visualRadius, game.size.y - visualRadius);
       game.endGame();
     } else {
-      // Calculate danger ratio (0.0 to 1.0) based on proximity to top/bottom edges
+      // Danger ratio (0.0 to 1.0) from proximity
+      // to the top/bottom edges.
       final topDist = position.y - visualRadius;
       final bottomDist = game.size.y - (position.y + visualRadius);
       final minDist = topDist < bottomDist ? topDist : bottomDist;
@@ -85,26 +89,36 @@ class OrbComponent extends PositionComponent
   @override
   void render(Canvas canvas) {
     final center = Offset(visualRadius, visualRadius);
+    final palette = game.palette.value;
+    final dimmed = game.comfortDim.value;
+    final glowScale = dimmed ? 0.55 : 1.0;
 
-    // Default neon colors
-    Color baseGlow = AppColor.intenseMagenta.withValues(alpha: 0.35);
-    Color centerGradient = AppColor.intenseMagenta;
-    Color midGradient = AppColor.neonRose;
-    Color outerGradient = AppColor.secondaryContainer;
+    // Orb body follows the selected palette: secondary core
+    // blending out to primary.
+    Color baseGlow = palette.secondary.withValues(alpha: 0.35 * glowScale);
+    Color centerGradient = palette.secondary;
+    Color midGradient = Color.lerp(palette.secondary, palette.primary, 0.55)!;
+    Color outerGradient = palette.primary;
 
     if (_dangerRatio > 0) {
       final pulseFactor = 0.5 + 0.5 * sin(_pulseTime);
 
       final dangerColor = Color.lerp(
-        AppColor.intenseMagenta,
+        palette.secondary,
         AppColor.error, // Red
         _dangerRatio,
       )!;
 
-      baseGlow = dangerColor.withValues(alpha: 0.35 + (0.2 * _dangerRatio * pulseFactor));
+      baseGlow = dangerColor.withValues(
+        alpha: (0.35 + (0.2 * _dangerRatio * pulseFactor)) * glowScale,
+      );
       centerGradient = dangerColor;
-      midGradient = Color.lerp(AppColor.neonRose, AppColor.errorContainer, _dangerRatio)!;
-      outerGradient = Color.lerp(AppColor.secondaryContainer, AppColor.error, _dangerRatio)!;
+      midGradient = Color.lerp(
+        midGradient,
+        AppColor.errorContainer,
+        _dangerRatio,
+      )!;
+      outerGradient = Color.lerp(outerGradient, AppColor.error, _dangerRatio)!;
     }
 
     canvas.drawCircle(
@@ -112,7 +126,7 @@ class OrbComponent extends PositionComponent
       visualRadius * 1.6,
       Paint()
         ..color = baseGlow
-        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 18),
+        ..maskFilter = MaskFilter.blur(BlurStyle.normal, dimmed ? 12 : 18),
     );
 
     final gradient = RadialGradient(
@@ -129,7 +143,10 @@ class OrbComponent extends PositionComponent
     );
 
     canvas.drawCircle(
-      Offset(visualRadius - visualRadius * 0.35, visualRadius - visualRadius * 0.35),
+      Offset(
+        visualRadius - visualRadius * 0.35,
+        visualRadius - visualRadius * 0.35,
+      ),
       visualRadius * 0.3,
       Paint()..color = const Color(0xCCFFFFFF),
     );

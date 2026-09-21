@@ -20,6 +20,19 @@ class SoundService {
   Future<void> preload() async {
     if (_loaded) return;
     try {
+      // iOS defaults to the ambient session, which the mute switch silences.
+      // Playback ignores the switch (proper game behavior on both stores);
+      // Android gets the game usage so SFX duck correctly.
+      await AudioPlayer.global.setAudioContext(
+        AudioContext(
+          android: const AudioContextAndroid(
+            contentType: AndroidContentType.music,
+            usageType: AndroidUsageType.game,
+            audioFocus: AndroidAudioFocus.gain,
+          ),
+          iOS: AudioContextIOS(category: AVAudioSessionCategory.playback),
+        ),
+      );
       await FlameAudio.audioCache.loadAll(_files);
       _loaded = true;
     } catch (_) {

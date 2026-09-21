@@ -12,9 +12,7 @@ class HomeLayout extends StatelessWidget {
     super.key,
     this.onTapToPlay,
     this.highScore = 0,
-    this.onTapRetos,
     this.onTapPalette,
-    this.onTapRanking,
     this.onTapSound,
     this.soundEnabled = true,
     this.onTapSettings,
@@ -25,11 +23,7 @@ class HomeLayout extends StatelessWidget {
 
   final int highScore;
 
-  final VoidCallback? onTapRetos;
-
   final VoidCallback? onTapPalette;
-
-  final VoidCallback? onTapRanking;
 
   final VoidCallback? onTapSound;
 
@@ -77,11 +71,7 @@ class HomeLayout extends StatelessWidget {
                 const SizedBox(height: 20),
                 HeadphoneIcon(),
                 const SizedBox(height: 30),
-                ButtonActions(
-                  onTapRetos: onTapRetos,
-                  onTapPalette: onTapPalette,
-                  onTapRanking: onTapRanking,
-                ),
+                ButtonActions(onTapPalette: onTapPalette),
                 const SizedBox(height: 24),
                 SeasonText(),
                 const SizedBox(height: 16),

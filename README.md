@@ -13,7 +13,7 @@ atraviesa el hueco entre las barras de neón y suma un punto por cada obstáculo
 - **Pausa cuando quieras** con el botón superior derecho (cambia a ▶ en pausa) y continúa donde lo dejaste.
 - **Sonido neón** generado proceduralmente: salto, punto, GO, game over y clics de menú. Se puede silenciar en ajustes.
 - **Guía inicial**: la primera vez se muestra un diálogo de "Cómo jugar", recuperable con el icono de ayuda (?).
-- **Progreso local**: récord, misiones diarias/semanales con polvo astral, paletas desbloqueables y ranking. Todo en el dispositivo.
+- **Progreso local y sin conexión**: récord, misiones y temas viven en el dispositivo; el juego funciona sin internet.
 
 ## Estética visual
 
