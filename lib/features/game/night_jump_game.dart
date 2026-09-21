@@ -53,6 +53,26 @@ class NightJumpGame extends FlameGame with HasCollisionDetection, TapCallbacks {
   double _spawnTimer = 0;
   double _flightSeconds = 0;
 
+  /// Gentle logarithmic ramp over ~90s of flight. 0.0 at take-off,
+  /// 1.0 at 90s. Pauses automatically since [_flightSeconds] only
+  /// advances while playing.
+  static const double _rampTimeConstant = 18.0;
+
+  static double _rampFactor(double seconds) {
+    const divisor = 1.791759; // ln(1 + 90/18) = ln(6), i.e. factor hits 1.0 at ~90s
+    final factor = log(1 + seconds / _rampTimeConstant) / divisor;
+    return factor.clamp(0.0, 1.0);
+  }
+
+  /// Scroll speed: difficulty base + up to +100 (classic 180 → 280).
+  double get currentObstacleSpeed =>
+      difficulty.value.obstacleSpeed + 100 * _rampFactor(_flightSeconds);
+
+  /// Spawn gap: difficulty base down to −0.5s (classic 1.6 → 1.1s).
+  double get currentSpawnInterval =>
+      (difficulty.value.spawnInterval - 0.5 * _rampFactor(_flightSeconds))
+          .clamp(0.9, 4.0);
+
   @override
   Future<void> onLoad() async {
     await super.onLoad();
@@ -189,14 +209,15 @@ class NightJumpGame extends FlameGame with HasCollisionDetection, TapCallbacks {
     flightTime.value = Duration(milliseconds: (_flightSeconds * 1000).round());
 
     _spawnTimer += dt;
-    if (_spawnTimer >= difficulty.value.spawnInterval) {
+    if (_spawnTimer >= currentSpawnInterval) {
       _spawnTimer = 0;
       add(
         ObstacleComponent(
           startX: size.x + ObstacleComponent.barWidth,
           screenHeight: size.y,
           random: random,
-          speed: difficulty.value.obstacleSpeed,
+          // Gap fixed per difficulty for the whole run: ramping never
+          // punishes base skill, only speed and frequency rise.
           gapHeight: difficulty.value.gapHeight,
         ),
       );

@@ -14,12 +14,10 @@ class ObstacleComponent extends PositionComponent
     with HasGameReference<NightJumpGame> {
   static const double barWidth = 64;
   static const double defaultGapHeight = 190;
-  static const double defaultSpeed = 180;
   static const double _edgeMargin = 90;
 
   final double screenHeight;
   final double gapCenterY;
-  final double speed;
   final double gapHeight;
   bool scored = false;
 
@@ -27,10 +25,8 @@ class ObstacleComponent extends PositionComponent
     required double startX,
     required this.screenHeight,
     required Random random,
-    double? speed,
     double? gapHeight,
-  }) : speed = speed ?? defaultSpeed,
-       gapHeight = gapHeight ?? defaultGapHeight,
+  }) : gapHeight = gapHeight ?? defaultGapHeight,
        gapCenterY =
             _edgeMargin + random.nextDouble() * (screenHeight - 2 * _edgeMargin),
        super(position: Vector2(startX, 0), size: Vector2(barWidth, 0));
@@ -56,7 +52,8 @@ class ObstacleComponent extends PositionComponent
     super.update(dt);
     if (game.status != GameStatus.playing) return;
 
-    position.x -= speed * dt;
+    // Live speed: all on-screen bars accelerate together as the run ramps.
+    position.x -= game.currentObstacleSpeed * dt;
 
     if (!scored && position.x + barWidth < game.orb.position.x) {
       scored = true;
