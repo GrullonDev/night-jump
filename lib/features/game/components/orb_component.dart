@@ -38,6 +38,7 @@ class OrbComponent extends PositionComponent
 
   void jump() {
     velocityY = jumpVelocity;
+    game.sound.jump();
     if (game.hapticsEnabled.value) {
       HapticFeedback.lightImpact();
     }

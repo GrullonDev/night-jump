@@ -47,6 +47,7 @@ class _MenuOverlayState extends State<MenuOverlay> {
       current: widget.game.difficulty.value,
       onSelected: (difficulty) async {
         await widget.game.setDifficulty(difficulty);
+        widget.game.sound.ui();
         widget.game.startGame();
       },
     );

@@ -11,6 +11,7 @@ import 'package:night_jump/features/game/components/starfield_component.dart';
 import 'package:night_jump/features/game/state/game_difficulty.dart';
 import 'package:night_jump/features/game/state/game_status.dart';
 import 'package:night_jump/features/game/state/score_repository.dart';
+import 'package:night_jump/features/game/state/sound_service.dart';
 import 'package:night_jump/features/missions/state/missions_repository.dart';
 import 'package:night_jump/features/settings/state/settings_repository.dart';
 
@@ -47,6 +48,10 @@ class NightJumpGame extends FlameGame with HasCollisionDetection, TapCallbacks {
   final ValueNotifier<bool> soundEnabled = ValueNotifier<bool>(true);
   final ValueNotifier<bool> hapticsEnabled = ValueNotifier<bool>(true);
 
+  late final SoundService sound = SoundService(
+    isEnabled: () => soundEnabled.value,
+  );
+
   GameStatus status = GameStatus.menu;
 
   late final OrbComponent orb;
@@ -82,6 +87,7 @@ class NightJumpGame extends FlameGame with HasCollisionDetection, TapCallbacks {
     difficulty.value = GameDifficultyX.fromId(
       await settingsRepository.getDifficultyId(),
     );
+    await sound.preload();
 
     add(StarfieldComponent());
     orb = OrbComponent();
@@ -117,10 +123,12 @@ class NightJumpGame extends FlameGame with HasCollisionDetection, TapCallbacks {
   void beginPlaying() {
     status = GameStatus.playing;
     overlays.remove(countdownOverlay);
+    sound.go();
   }
 
   void addScore() {
     score.value++;
+    sound.score();
   }
 
   Future<void> toggleSound() async {
@@ -142,6 +150,7 @@ class NightJumpGame extends FlameGame with HasCollisionDetection, TapCallbacks {
     if (status == GameStatus.playing) {
       pauseGame();
     } else if (status == GameStatus.paused) {
+      sound.ui();
       resumeGame();
     }
   }
@@ -160,6 +169,7 @@ class NightJumpGame extends FlameGame with HasCollisionDetection, TapCallbacks {
     isPaused.value = false;
     pauseEngine();
     overlays.remove(hudOverlay);
+    sound.gameOver();
 
     final beatHighScore = await scoreRepository.saveScoreIfHigh(score.value);
     isNewHighScore.value = beatHighScore;
