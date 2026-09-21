@@ -4,8 +4,6 @@ import 'package:night_jump/features/game/night_jump_game.dart';
 import 'package:night_jump/features/game/overlays/difficulty_dialog.dart';
 import 'package:night_jump/features/game/overlays/how_to_play_dialog.dart';
 import 'package:night_jump/features/home/page/home_page.dart';
-import 'package:night_jump/features/leaderboard/page/leaderboard_sheet.dart';
-import 'package:night_jump/features/missions/page/missions_sheet.dart';
 import 'package:night_jump/features/settings/page/settings_sheet.dart';
 import 'package:night_jump/features/themes/page/theme_gallery_page.dart';
 import 'package:night_jump/features/themes/state/theme_repository.dart';
@@ -65,10 +63,6 @@ class _MenuOverlayState extends State<MenuOverlay> {
             return HomePage(
               onTapToPlay: _askDifficultyThenPlay,
               highScore: highScore,
-              onTapRetos: () => showMissionsSheet(
-                context,
-                repository: game.missionsRepository,
-              ),
               onTapPalette: () => Navigator.of(context).push(
                 MaterialPageRoute(
                   builder: (context) => ThemeGalleryPage(
@@ -77,8 +71,6 @@ class _MenuOverlayState extends State<MenuOverlay> {
                   ),
                 ),
               ),
-              onTapRanking: () =>
-                  showLeaderboardSheet(context, onPlayNow: game.startGame),
               soundEnabled: soundEnabled,
               onTapSound: game.toggleSound,
               onTapSettings: () => showSettingsSheet(context, game),
