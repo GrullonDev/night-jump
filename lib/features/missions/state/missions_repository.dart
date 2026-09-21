@@ -25,6 +25,12 @@ class MissionsRepository {
     return prefs.getInt(_stardustKey) ?? 0;
   }
 
+  Future<void> addDust(int amount) async {
+    final prefs = await SharedPreferences.getInstance();
+    final current = prefs.getInt(_stardustKey) ?? 0;
+    await prefs.setInt(_stardustKey, current + amount);
+  }
+
   Future<bool> spendStardust(int amount) async {
     final prefs = await SharedPreferences.getInstance();
     final current = prefs.getInt(_stardustKey) ?? 0;

@@ -70,8 +70,20 @@ class _ThemeGalleryPageState extends State<ThemeGalleryPage> {
         _previewPaletteId = palette.id;
       });
     } else if (mounted) {
+      final deficit = palette.cost - _stardust;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Necesitas ${palette.cost} de polvo astral')),
+        SnackBar(
+          content: Text(
+            deficit > 0
+                ? 'Te faltan $deficit polvos para desbloquear ${palette.name}'
+                : 'Necesitas ${palette.cost} polvos para ${palette.name}',
+          ),
+          action: SnackBarAction(
+            label: 'JUGAR',
+            textColor: AppColor.electricCyan,
+            onPressed: () => Navigator.of(context).pop(),
+          ),
+        ),
       );
     }
   }
