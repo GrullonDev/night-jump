@@ -18,6 +18,7 @@ class HomeLayout extends StatelessWidget {
     this.onTapSound,
     this.soundEnabled = true,
     this.onTapSettings,
+    this.onTapHelp,
   });
 
   final VoidCallback? onTapToPlay;
@@ -35,6 +36,8 @@ class HomeLayout extends StatelessWidget {
   final bool soundEnabled;
 
   final VoidCallback? onTapSettings;
+
+  final VoidCallback? onTapHelp;
 
   @override
   Widget build(BuildContext context) {
@@ -55,6 +58,7 @@ class HomeLayout extends StatelessWidget {
                   soundEnabled,
                   onTapSound,
                   onTapSettings,
+                  onTapHelp,
                 ),
                 const SizedBox(height: 40),
                 _buildTitle(titleFontSize),
@@ -95,6 +99,7 @@ Widget _buildHeader(
   bool soundEnabled,
   VoidCallback? onTapSound,
   VoidCallback? onTapSettings,
+  VoidCallback? onTapHelp,
 ) {
   return Row(
     children: [
@@ -142,6 +147,8 @@ Widget _buildHeader(
         soundEnabled ? Icons.volume_up_rounded : Icons.volume_off_rounded,
         onTapSound,
       ),
+      const SizedBox(width: 12),
+      _buildIconCircle(Icons.help_outline_rounded, onTapHelp),
       const SizedBox(width: 12),
       _buildIconCircle(Icons.settings_rounded, onTapSettings),
     ],
