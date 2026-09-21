@@ -89,36 +89,36 @@ class OrbComponent extends PositionComponent
   @override
   void render(Canvas canvas) {
     final center = Offset(visualRadius, visualRadius);
+    final palette = game.palette.value;
+    final dimmed = game.comfortDim.value;
+    final glowScale = dimmed ? 0.55 : 1.0;
 
-    // Default neon colors
-    Color baseGlow = AppColor.intenseMagenta.withValues(alpha: 0.35);
-    Color centerGradient = AppColor.intenseMagenta;
-    Color midGradient = AppColor.neonRose;
-    Color outerGradient = AppColor.secondaryContainer;
+    // Orb body follows the selected palette: secondary core
+    // blending out to primary.
+    Color baseGlow = palette.secondary.withValues(alpha: 0.35 * glowScale);
+    Color centerGradient = palette.secondary;
+    Color midGradient = Color.lerp(palette.secondary, palette.primary, 0.55)!;
+    Color outerGradient = palette.primary;
 
     if (_dangerRatio > 0) {
       final pulseFactor = 0.5 + 0.5 * sin(_pulseTime);
 
       final dangerColor = Color.lerp(
-        AppColor.intenseMagenta,
+        palette.secondary,
         AppColor.error, // Red
         _dangerRatio,
       )!;
 
       baseGlow = dangerColor.withValues(
-        alpha: 0.35 + (0.2 * _dangerRatio * pulseFactor),
+        alpha: (0.35 + (0.2 * _dangerRatio * pulseFactor)) * glowScale,
       );
       centerGradient = dangerColor;
       midGradient = Color.lerp(
-        AppColor.neonRose,
+        midGradient,
         AppColor.errorContainer,
         _dangerRatio,
       )!;
-      outerGradient = Color.lerp(
-        AppColor.secondaryContainer,
-        AppColor.error,
-        _dangerRatio,
-      )!;
+      outerGradient = Color.lerp(outerGradient, AppColor.error, _dangerRatio)!;
     }
 
     canvas.drawCircle(
@@ -126,7 +126,7 @@ class OrbComponent extends PositionComponent
       visualRadius * 1.6,
       Paint()
         ..color = baseGlow
-        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 18),
+        ..maskFilter = MaskFilter.blur(BlurStyle.normal, dimmed ? 12 : 18),
     );
 
     final gradient = RadialGradient(

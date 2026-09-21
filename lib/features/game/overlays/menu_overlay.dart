@@ -6,7 +6,6 @@ import 'package:night_jump/features/game/overlays/how_to_play_dialog.dart';
 import 'package:night_jump/features/home/page/home_page.dart';
 import 'package:night_jump/features/settings/page/settings_sheet.dart';
 import 'package:night_jump/features/themes/page/theme_gallery_page.dart';
-import 'package:night_jump/features/themes/state/theme_repository.dart';
 
 class MenuOverlay extends StatefulWidget {
   const MenuOverlay({super.key, required this.game});
@@ -63,14 +62,20 @@ class _MenuOverlayState extends State<MenuOverlay> {
             return HomePage(
               onTapToPlay: _askDifficultyThenPlay,
               highScore: highScore,
-              onTapPalette: () => Navigator.of(context).push(
-                MaterialPageRoute(
-                  builder: (context) => ThemeGalleryPage(
-                    themeRepository: ThemeRepository(),
-                    missionsRepository: game.missionsRepository,
+              onTapPalette: () async {
+                await Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (context) => ThemeGalleryPage(
+                      themeRepository: game.themeRepository,
+                      missionsRepository: game.missionsRepository,
+                      settingsRepository: game.settingsRepository,
+                    ),
                   ),
-                ),
-              ),
+                );
+                // Gallery edits SharedPreferences directly; pull the
+                // choices into the running game before the next run.
+                game.refreshTheme();
+              },
               soundEnabled: soundEnabled,
               onTapSound: game.toggleSound,
               onTapSettings: () => showSettingsSheet(context, game),

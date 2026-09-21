@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'package:night_jump/features/missions/state/missions_repository.dart';
+import 'package:night_jump/features/settings/state/settings_repository.dart';
 import 'package:night_jump/features/themes/state/neon_palette.dart';
 import 'package:night_jump/features/themes/state/theme_repository.dart';
 import 'package:night_jump/features/themes/widgets/palette_card.dart';
@@ -13,10 +14,12 @@ class ThemeGalleryPage extends StatefulWidget {
     super.key,
     required this.themeRepository,
     required this.missionsRepository,
+    this.settingsRepository,
   });
 
   final ThemeRepository themeRepository;
   final MissionsRepository missionsRepository;
+  final SettingsRepository? settingsRepository;
 
   @override
   State<ThemeGalleryPage> createState() => _ThemeGalleryPageState();
@@ -29,6 +32,8 @@ class _ThemeGalleryPageState extends State<ThemeGalleryPage> {
   int _stardust = 0;
   bool _comfortMode = false;
   bool _loading = true;
+  late final SettingsRepository _settings =
+      widget.settingsRepository ?? SettingsRepository();
 
   @override
   void initState() {
@@ -40,11 +45,14 @@ class _ThemeGalleryPageState extends State<ThemeGalleryPage> {
     final selected = await widget.themeRepository.getSelectedPaletteId();
     final unlocked = await widget.themeRepository.getUnlockedPaletteIds();
     final stardust = await widget.missionsRepository.getStardust();
+    final comfort = await _settings.getComfortDim();
+    if (!mounted) return;
     setState(() {
       _confirmedPaletteId = selected;
       _previewPaletteId = selected;
       _unlockedIds = unlocked;
       _stardust = stardust;
+      _comfortMode = comfort;
       _loading = false;
     });
   }
@@ -164,8 +172,10 @@ class _ThemeGalleryPageState extends State<ThemeGalleryPage> {
                     const SizedBox(height: 16),
                     _ComfortToggle(
                       value: _comfortMode,
-                      onChanged: (value) =>
-                          setState(() => _comfortMode = value),
+                      onChanged: (value) async {
+                        setState(() => _comfortMode = value);
+                        await _settings.setComfortDim(value);
+                      },
                     ),
                     const SizedBox(height: 20),
                     Row(
@@ -206,8 +216,7 @@ class _ThemeGalleryPageState extends State<ThemeGalleryPage> {
                     _ConfirmButton(enabled: hasChanges, onTap: _confirm),
                     const SizedBox(height: 12),
                     Text(
-                      'LOS TEMAS AJUSTAN ARMÓNICAMENTE PLATAFORMAS, '
-                      'HUD Y DESTELLOS',
+                      'LOS TEMAS AJUSTAN EL ORBE Y LAS BARRERAS DEL JUEGO',
                       textAlign: TextAlign.center,
                       style: TextStyle(
                         color: AppColor.slateGlow,

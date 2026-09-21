@@ -14,15 +14,19 @@ import 'package:night_jump/features/game/state/score_repository.dart';
 import 'package:night_jump/features/game/state/sound_service.dart';
 import 'package:night_jump/features/missions/state/missions_repository.dart';
 import 'package:night_jump/features/settings/state/settings_repository.dart';
+import 'package:night_jump/features/themes/state/neon_palette.dart';
+import 'package:night_jump/features/themes/state/theme_repository.dart';
 
 class NightJumpGame extends FlameGame with HasCollisionDetection, TapCallbacks {
   NightJumpGame({
     ScoreRepository? scoreRepository,
     MissionsRepository? missionsRepository,
     SettingsRepository? settingsRepository,
+    ThemeRepository? themeRepository,
   }) : scoreRepository = scoreRepository ?? ScoreRepository(),
        missionsRepository = missionsRepository ?? MissionsRepository(),
-       settingsRepository = settingsRepository ?? SettingsRepository();
+       settingsRepository = settingsRepository ?? SettingsRepository(),
+       themeRepository = themeRepository ?? ThemeRepository();
 
   static const String menuOverlay = 'menu';
   static const String hudOverlay = 'hud';
@@ -33,6 +37,7 @@ class NightJumpGame extends FlameGame with HasCollisionDetection, TapCallbacks {
   final ScoreRepository scoreRepository;
   final MissionsRepository missionsRepository;
   final SettingsRepository settingsRepository;
+  final ThemeRepository themeRepository;
   final Random random = Random();
 
   final ValueNotifier<int> score = ValueNotifier<int>(0);
@@ -46,6 +51,10 @@ class NightJumpGame extends FlameGame with HasCollisionDetection, TapCallbacks {
   );
   final ValueNotifier<bool> soundEnabled = ValueNotifier<bool>(true);
   final ValueNotifier<bool> hapticsEnabled = ValueNotifier<bool>(true);
+  final ValueNotifier<NeonPalette> palette = ValueNotifier<NeonPalette>(
+    NeonPalette.catalog.first,
+  );
+  final ValueNotifier<bool> comfortDim = ValueNotifier<bool>(false);
 
   late final SoundService sound = SoundService(
     isEnabled: () => soundEnabled.value,
@@ -87,6 +96,7 @@ class NightJumpGame extends FlameGame with HasCollisionDetection, TapCallbacks {
     difficulty.value = GameDifficultyX.fromId(
       await settingsRepository.getDifficultyId(),
     );
+    await refreshTheme();
     await sound.preload();
 
     add(StarfieldComponent());
@@ -144,6 +154,20 @@ class NightJumpGame extends FlameGame with HasCollisionDetection, TapCallbacks {
   Future<void> setDifficulty(GameDifficulty value) async {
     difficulty.value = value;
     await settingsRepository.setDifficultyId(value.id);
+  }
+
+  /// Re-reads the gallery choices (palette + comfort) after the player
+  /// returns from the theme gallery.
+  Future<void> refreshTheme() async {
+    palette.value = NeonPalette.byId(
+      await themeRepository.getSelectedPaletteId(),
+    );
+    comfortDim.value = await settingsRepository.getComfortDim();
+  }
+
+  Future<void> setComfortDim(bool value) async {
+    comfortDim.value = value;
+    await settingsRepository.setComfortDim(value);
   }
 
   void togglePause() {
