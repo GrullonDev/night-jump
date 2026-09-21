@@ -87,4 +87,9 @@ class AppColor {
   static const Color inputRecessed = Color(0xFF040712);
   static const Color deepNavy = Color(0xFF0B1226);
   static const Color translucentDarkSlate = Color(0xFF070B1A);
+
+  // ── Shield & Gem Colors ──
+  static const Color shieldCyan = Color(0xFF00F0FF);
+  static const Color gemGreen = Color(0xFF39FF14);
+  static const Color gemGreenDark = Color(0xFF1A8A0A);
 }
