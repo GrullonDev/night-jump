@@ -13,20 +13,26 @@ import 'package:night_jump/utils/theme/app_color.dart';
 class ObstacleComponent extends PositionComponent
     with HasGameReference<NightJumpGame> {
   static const double barWidth = 64;
-  static const double gapHeight = 190;
-  static const double speed = 180;
+  static const double defaultGapHeight = 190;
+  static const double defaultSpeed = 180;
   static const double _edgeMargin = 90;
 
   final double screenHeight;
   final double gapCenterY;
+  final double speed;
+  final double gapHeight;
   bool scored = false;
 
   ObstacleComponent({
     required double startX,
     required this.screenHeight,
     required Random random,
-  }) : gapCenterY =
-           _edgeMargin + random.nextDouble() * (screenHeight - 2 * _edgeMargin),
+    double? speed,
+    double? gapHeight,
+  }) : speed = speed ?? defaultSpeed,
+       gapHeight = gapHeight ?? defaultGapHeight,
+       gapCenterY =
+            _edgeMargin + random.nextDouble() * (screenHeight - 2 * _edgeMargin),
        super(position: Vector2(startX, 0), size: Vector2(barWidth, 0));
 
   @override

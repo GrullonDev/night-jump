@@ -7,6 +7,7 @@ import 'package:night_jump/features/game/overlays/countdown_overlay.dart';
 import 'package:night_jump/features/game/overlays/game_over_overlay.dart';
 import 'package:night_jump/features/game/overlays/hud_overlay.dart';
 import 'package:night_jump/features/game/overlays/menu_overlay.dart';
+import 'package:night_jump/features/game/overlays/pause_overlay.dart';
 import 'package:night_jump/utils/theme/app_color.dart';
 
 class GamePage extends StatefulWidget {
@@ -44,6 +45,8 @@ class _GamePageState extends State<GamePage> {
                 GameOverOverlay(game: game),
             NightJumpGame.countdownOverlay: (context, game) =>
                 CountdownOverlay(game: game),
+            NightJumpGame.pauseOverlay: (context, game) =>
+                PauseOverlay(game: game),
           },
         ),
       ),

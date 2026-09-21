@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'package:night_jump/features/game/night_jump_game.dart';
+import 'package:night_jump/features/game/overlays/difficulty_dialog.dart';
 import 'package:night_jump/features/game/overlays/how_to_play_dialog.dart';
 import 'package:night_jump/features/home/page/home_page.dart';
 import 'package:night_jump/features/leaderboard/page/leaderboard_sheet.dart';
@@ -31,11 +32,24 @@ class _MenuOverlayState extends State<MenuOverlay> {
     if (seen || !mounted) return;
     await widget.game.settingsRepository.setHowToPlaySeen();
     if (!mounted) return;
-    showHowToPlayDialog(context, onPlay: widget.game.startGame);
+    showHowToPlayDialog(context, onPlay: _askDifficultyThenPlay);
   }
 
   void _showHowToPlayNow() {
-    showHowToPlayDialog(context, onPlay: widget.game.startGame);
+    showHowToPlayDialog(context, onPlay: _askDifficultyThenPlay);
+  }
+
+  /// "Tap to jump" opens the difficulty picker; picking one persists
+  /// the choice and starts the run immediately.
+  void _askDifficultyThenPlay() {
+    showDifficultyDialog(
+      context,
+      current: widget.game.difficulty.value,
+      onSelected: (difficulty) async {
+        await widget.game.setDifficulty(difficulty);
+        widget.game.startGame();
+      },
+    );
   }
 
   @override
@@ -48,7 +62,7 @@ class _MenuOverlayState extends State<MenuOverlay> {
           valueListenable: game.soundEnabled,
           builder: (context, soundEnabled, _) {
             return HomePage(
-              onTapToPlay: game.startGame,
+              onTapToPlay: _askDifficultyThenPlay,
               highScore: highScore,
               onTapRetos: () => showMissionsSheet(
                 context,
