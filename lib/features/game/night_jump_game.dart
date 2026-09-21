@@ -5,6 +5,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flame/events.dart';
 import 'package:flame/game.dart';
 
+import 'package:night_jump/features/game/components/mine_component.dart';
 import 'package:night_jump/features/game/components/obstacle_component.dart';
 import 'package:night_jump/features/game/components/orb_component.dart';
 import 'package:night_jump/features/game/components/shield_gem_component.dart';
@@ -67,6 +68,11 @@ class NightJumpGame extends FlameGame with HasCollisionDetection, TapCallbacks {
 
   // ── Run Stats ──
   final ValueNotifier<int> dustEarnedThisRun = ValueNotifier<int>(0);
+
+  // ── Mine System (Tranquilo only) ──
+  double _mineSpawnTimer = 0;
+  static const double _mineSpawnInterval = 4.0;
+  static const int _maxMines = 3;
 
   late final SoundService sound = SoundService(
     isEnabled: () => soundEnabled.value,
@@ -132,6 +138,7 @@ class NightJumpGame extends FlameGame with HasCollisionDetection, TapCallbacks {
     _spawnTimer = 0;
     _flightSeconds = 0;
     _obstaclesSinceLastGem = 0;
+    _mineSpawnTimer = 0;
     _chillShieldGranted = false;
     shieldCount.value = difficulty.value.startingShields;
     shieldActive.value = false;
@@ -142,6 +149,9 @@ class NightJumpGame extends FlameGame with HasCollisionDetection, TapCallbacks {
     );
     children.whereType<ShieldGemComponent>().toList().forEach(
       (gem) => gem.removeFromParent(),
+    );
+    children.whereType<MineComponent>().toList().forEach(
+      (mine) => mine.removeFromParent(),
     );
     orb.reset();
 
@@ -310,6 +320,9 @@ class NightJumpGame extends FlameGame with HasCollisionDetection, TapCallbacks {
     children.whereType<ShieldGemComponent>().toList().forEach(
       (gem) => gem.removeFromParent(),
     );
+    children.whereType<MineComponent>().toList().forEach(
+      (mine) => mine.removeFromParent(),
+    );
     shieldActive.value = false;
     showShieldDialogue.value = false;
     orb.reset();
@@ -380,6 +393,30 @@ class NightJumpGame extends FlameGame with HasCollisionDetection, TapCallbacks {
         }
       }
     }
+
+    // Mine spawning (Tranquilo only)
+    if (difficulty.value == GameDifficulty.chill) {
+      _mineSpawnTimer += dt;
+      if (_mineSpawnTimer >= _mineSpawnInterval &&
+          children.whereType<MineComponent>().length < _maxMines) {
+        _mineSpawnTimer = 0;
+        _spawnMine();
+      }
+    }
+  }
+
+  void _spawnMine() {
+    // Spawn in the upper 40% of the screen
+    final minY = 40.0;
+    final maxY = size.y * 0.4;
+    final mineY = minY + random.nextDouble() * (maxY - minY);
+    final mineX = size.x + 40 + random.nextDouble() * 80;
+
+    add(
+      MineComponent(
+        position: Vector2(mineX, mineY),
+      ),
+    );
   }
 
   void _spawnGemInGap(ObstacleComponent obstacle) {
