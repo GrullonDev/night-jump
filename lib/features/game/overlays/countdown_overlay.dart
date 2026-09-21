@@ -26,10 +26,16 @@ class _CountdownOverlayState extends State<CountdownOverlay>
   static const _stepDuration = Duration(milliseconds: 850);
 
   int _stepIndex = 0;
+  bool _ready = false;
 
   @override
-  void initState() {
-    super.initState();
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // MediaQuery (and any inherited widget) must not be read in
+    // initState; this runs after initState and before the first build.
+    if (_ready) return;
+    _ready = true;
+
     // Calm entrance: small fade + settle, no overshoot. With reduced
     // motion the steps complete instantly so the wait disappears too.
     final reduceMotion = MediaQuery.disableAnimationsOf(context);
