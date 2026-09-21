@@ -59,7 +59,8 @@ class OrbComponent extends PositionComponent
       position.y = position.y.clamp(visualRadius, game.size.y - visualRadius);
       game.endGame();
     } else {
-      // Calculate danger ratio (0.0 to 1.0) based on proximity to top/bottom edges
+      // Danger ratio (0.0 to 1.0) from proximity
+      // to the top/bottom edges.
       final topDist = position.y - visualRadius;
       final bottomDist = game.size.y - (position.y + visualRadius);
       final minDist = topDist < bottomDist ? topDist : bottomDist;

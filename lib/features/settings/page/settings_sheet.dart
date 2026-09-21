@@ -268,7 +268,8 @@ class _ResetProgressTile extends StatelessWidget {
           style: TextStyle(color: AppColor.onSurface, fontFamily: 'Sora'),
         ),
         content: Text(
-          'Esta acción borrará tu récord, retos, polvo astral y temas desbloqueados. No se puede deshacer.',
+          'Esta acción borrará tu récord, retos, polvo astral y '
+          'temas desbloqueados. No se puede deshacer.',
           style: TextStyle(
             color: AppColor.slateGlow,
             fontFamily: 'Space Grotesk',

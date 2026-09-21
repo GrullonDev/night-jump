@@ -206,7 +206,8 @@ class _ThemeGalleryPageState extends State<ThemeGalleryPage> {
                     _ConfirmButton(enabled: hasChanges, onTap: _confirm),
                     const SizedBox(height: 12),
                     Text(
-                      'LOS TEMAS AJUSTAN ARMÓNICAMENTE PLATAFORMAS, HUD Y DESTELLOS',
+                      'LOS TEMAS AJUSTAN ARMÓNICAMENTE PLATAFORMAS, '
+                      'HUD Y DESTELLOS',
                       textAlign: TextAlign.center,
                       style: TextStyle(
                         color: AppColor.slateGlow,
