@@ -30,23 +30,23 @@ class _CountdownOverlayState extends State<CountdownOverlay>
   @override
   void initState() {
     super.initState();
-    _controller = AnimationController(vsync: this, duration: _stepDuration);
+    // Calm entrance: small fade + settle, no overshoot. With reduced
+    // motion the steps complete instantly so the wait disappears too.
+    final reduceMotion = MediaQuery.disableAnimationsOf(context);
+    _controller = AnimationController(
+      vsync: this,
+      duration: reduceMotion ? Duration.zero : _stepDuration,
+    );
 
     _scale = TweenSequence<double>([
       TweenSequenceItem(
         tween: Tween(
-          begin: 0.55,
-          end: 1.1,
-        ).chain(CurveTween(curve: Curves.easeOutBack)),
-        weight: 55,
+          begin: 0.85,
+          end: 1.0,
+        ).chain(CurveTween(curve: Curves.easeOutCubic)),
+        weight: 60,
       ),
-      TweenSequenceItem(
-        tween: Tween(
-          begin: 1.1,
-          end: 0.9,
-        ).chain(CurveTween(curve: Curves.easeIn)),
-        weight: 45,
-      ),
+      TweenSequenceItem(tween: ConstantTween(1.0), weight: 40),
     ]).animate(_controller);
 
     _opacity = TweenSequence<double>([
@@ -116,12 +116,12 @@ class _CountdownOverlayState extends State<CountdownOverlay>
                     fontFamily: 'Sora',
                     shadows: [
                       Shadow(
-                        color: glowColor.withValues(alpha: 0.8),
-                        blurRadius: 40,
+                        color: glowColor.withValues(alpha: 0.5),
+                        blurRadius: 24,
                       ),
                       Shadow(
-                        color: glowColor.withValues(alpha: 0.4),
-                        blurRadius: 80,
+                        color: glowColor.withValues(alpha: 0.25),
+                        blurRadius: 48,
                       ),
                     ],
                   ),
