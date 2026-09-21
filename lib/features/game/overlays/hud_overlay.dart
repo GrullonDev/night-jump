@@ -53,18 +53,73 @@ class HudOverlay extends StatelessWidget {
               alignment: Alignment.topRight,
               child: Padding(
                 padding: const EdgeInsets.only(right: 20.0),
-                child: ValueListenableBuilder<bool>(
-                  valueListenable: game.isPaused,
-                  builder: (context, paused, _) {
-                    return IconButton(
-                      icon: Icon(
-                        paused ? Icons.play_arrow_rounded : Icons.pause_rounded,
-                        color: AppColor.electricCyan,
-                        size: 32,
-                      ),
-                      onPressed: game.togglePause,
-                    );
-                  },
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    ValueListenableBuilder<bool>(
+                      valueListenable: game.isPaused,
+                      builder: (context, paused, _) {
+                        return IconButton(
+                          icon: Icon(
+                            paused ? Icons.play_arrow_rounded : Icons.pause_rounded,
+                            color: AppColor.electricCyan,
+                            size: 32,
+                          ),
+                          onPressed: game.togglePause,
+                        );
+                      },
+                    ),
+                    const SizedBox(height: 4),
+                    ValueListenableBuilder<int>(
+                      valueListenable: game.shieldCount,
+                      builder: (context, shieldCount, _) {
+                        return ValueListenableBuilder<bool>(
+                          valueListenable: game.shieldActive,
+                          builder: (context, shieldActive, _) {
+                            return Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 10,
+                                vertical: 6,
+                              ),
+                              decoration: BoxDecoration(
+                                color: AppColor.hudGlass.withValues(alpha: 0.6),
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(
+                                  color: shieldActive
+                                      ? AppColor.shieldCyan.withValues(alpha: 0.6)
+                                      : AppColor.electricCyan.withValues(alpha: 0.2),
+                                ),
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(
+                                    Icons.shield_rounded,
+                                    color: shieldActive
+                                        ? AppColor.shieldCyan
+                                        : AppColor.slateGlow,
+                                    size: 16,
+                                  ),
+                                  const SizedBox(width: 6),
+                                  Text(
+                                    '$shieldCount',
+                                    style: TextStyle(
+                                      color: shieldActive
+                                          ? AppColor.shieldCyan
+                                          : AppColor.slateWhite,
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w700,
+                                      fontFamily: 'Space Grotesk',
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            );
+                          },
+                        );
+                      },
+                    ),
+                  ],
                 ),
               ),
             ),
