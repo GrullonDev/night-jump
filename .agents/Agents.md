@@ -1,8 +1,9 @@
 # Night Jump — Contributor & AI Agent Guide
 
 > Put this file in front of any contributor — human or AI — before they touch the project.
-> Path: `Agents/Agents.md`. Stack: Flutter + Flame. Language of the UI: Spanish.
+> Path: `.agents/Agents.md`. Stack: Flutter + Flame. Language of the UI: Spanish.
 > Product goal: a **relaxing night arcade** — the player should leave stress behind, never find more of it.
+> Fully offline: no network dependencies, no external services — everything runs locally.
 
 ## 1. What this project is
 
@@ -23,8 +24,9 @@ Design pillars (never break these):
 |------------|--------|
 | SDK        | Flutter stable 3.47 / Dart 3.13 |
 | Game engine| `flame ^1.38.2` (FlameGame, collisions, tap callbacks) |
-| Audio      | `flame_audio` (low-latency SFX), procedural WAVs in `assets/audio/` |
+| Audio      | `flame_audio` (low-latency SFX) + `audioplayers` global context (playback session on iOS), procedural WAVs in `assets/audio/` |
 | Persistence| `shared_preferences` (high score, missions/stardust, themes, settings) |
+| Network    | None — no `http`/`dio`/`firebase`/connectivity deps; all assets bundled; works offline |
 | Android    | AGP 9.1, NDK 28.2 (`flutter.ndkVersion`), compile/target SDK 36, minSdk 24, `useLegacyPackaging = false` for the 16 KB page-size rule |
 | iOS        | Deployment target 15.0, `TARGETED_DEVICE_FAMILY = 1,2` (iPhone + iPad), no required device capabilities |
 
@@ -46,8 +48,11 @@ lib/
     components/obstacle_component.dart # neon bar pairs, live speed from the game
     components/starfield_component.dart # parallax background
     overlays/                        # menu, hud, countdown, pause, game_over,
-                                     # how_to_play_dialog, difficulty_dialog
+                                     # how_to_play_dialog, difficulty_dialog,
+                                     # soft_entrance (shared gentle entrance)
     page/game_page.dart              # GameWidget + overlay registration (ALL overlays must be registered here)
+  features/home/                     # menu screen (HomePage + HomeLayout + widgets,
+                                     # CharacterOrb breathes gently, static on reduced motion)
   features/home/                     # menu screen (HomePage + HomeLayout + widgets)
   features/missions/                 # daily/weekly challenges + stardust (SharedPreferences)
   features/leaderboard/              # rankings — NOTE: rival rows are a fixed local sample roster, not live data
@@ -55,7 +60,7 @@ lib/
   features/settings/                 # sound/haptics toggles, tutorial flag, difficulty, reset-progress
 assets/audio/                        # jump, score, go, game_over, ui (procedural 16-bit/44.1 kHz WAV)
 assets/images/                       # app icon
-test/widget_test.dart                # placeholder default test — does NOT cover the game (see §8)
+test/game_test.dart                # offline unit tests: difficulty table, ramp base values, sound guard
 Agents/Agents.md                     # this file
 ```
 
@@ -67,7 +72,8 @@ Agents/Agents.md                     # this file
 | Visual / hitbox | visual radius `22`, hitbox radius `16` (~73 % — intentional forgiveness) |
 | Difficulties | chill `130px/s · 2.0s · gap 230` / classic `180 · 1.6 · 190` / intense `235 · 1.25 · 170` |
 | Progressive ramp | `ln(1 + t/18) / ln(6)` over flight time `t`: **+100 px/s** speed, **−0.5 s** interval, capped at ~90 s; gap fixed per run; pause-safe (time only accrues while `playing`) |
-| Countdown | 3-2-1-¡GO!, 850 ms/step, obstacles gated on `status == playing` |
+| Countdown | 3-2-1-¡GO!, 850 ms/step, obstacles gated on `status == playing`; gentle scale (0.85→1.0, easeOutCubic), instant when reduced motion is on |
+| Motion | overlays fade + rise 280 ms (`soft_entrance.dart`); menu orb breathes 2.6 s; everything static under reduced motion |
 | Edge warning | red pulsing lerp within `80 px` of ceiling/floor |
 | Pause | `pauseEngine()` + overlay; resume is **in place** (no re-countdown); HUD button toggles ⏸/▶ via `isPaused` |
 
@@ -93,7 +99,8 @@ Agents/Agents.md                     # this file
 
 ## 7. Known issues & honest TODOs (good first contributions)
 
-- `test/widget_test.dart` is the Flutter template counter test — it tests nothing about the game. A real suite (difficulty ramp math, repositories with fake SharedPreferences, overlay registration) is wanted.
+- `test/game_test.dart` covers difficulty params, ramp base values and the sound guard. Extend it (repositories with fake SharedPreferences, overlay registration) rather than adding widget tests that need a device.
+- Unused deps were removed (`zo_animated_border`, `cupertino_icons`). Do not re-add a dependency without a used import.
 - Release Android build recently hit a corrupt Gradle transforms cache (`immutable workspace … modified`); clearing `gradle/caches/<ver>/transforms` is the known workaround — investigate a durable fix.
 - Weekly mission target (`50000`) and leaderboard rival scores are unreachable versus real single-digit scores — retune or reframe.
 - Selected neon palette / comfort toggle affect only the gallery preview, not the in-game orb/bars — wire through or remove the claim.
