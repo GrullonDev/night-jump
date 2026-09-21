@@ -181,14 +181,17 @@ class _ThemeGalleryPageState extends State<ThemeGalleryPage> {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Text(
-                          'COLECCIÓN DE ESPECTROS',
-                          style: TextStyle(
-                            color: AppColor.slateGlow,
-                            fontSize: 11,
-                            fontWeight: FontWeight.w700,
-                            letterSpacing: 0.1,
-                            fontFamily: 'Space Grotesk',
+                        Flexible(
+                          child: Text(
+                            'COLECCIÓN DE ESPECTROS',
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              color: AppColor.slateGlow,
+                              fontSize: 11,
+                              fontWeight: FontWeight.w700,
+                              letterSpacing: 0.1,
+                              fontFamily: 'Space Grotesk',
+                            ),
                           ),
                         ),
                         Text(
@@ -408,14 +411,19 @@ class _ConfirmButton extends StatelessWidget {
             children: [
               Icon(Icons.palette_rounded, color: AppColor.canvasBase, size: 20),
               const SizedBox(width: 10),
-              Text(
-                'CONFIRMAR PALETA',
-                style: TextStyle(
-                  color: AppColor.canvasBase,
-                  fontSize: 16,
-                  fontWeight: FontWeight.w800,
-                  letterSpacing: 0.1,
-                  fontFamily: 'Space Grotesk',
+              Flexible(
+                child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: Text(
+                    'CONFIRMAR PALETA',
+                    style: TextStyle(
+                      color: AppColor.canvasBase,
+                      fontSize: 16,
+                      fontWeight: FontWeight.w800,
+                      letterSpacing: 0.1,
+                      fontFamily: 'Space Grotesk',
+                    ),
+                  ),
                 ),
               ),
             ],
