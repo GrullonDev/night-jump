@@ -6,7 +6,7 @@ atraviesa el hueco entre las barras de neón y suma un punto por cada obstáculo
 ## Cómo se juega
 
 - **Toca en cualquier lugar para saltar.** Al empezar verás una cuenta atrás de 3-2-1-¡GO! para prepararte.
-- **Elige tu ritmo** al pulsar para jugar: Tranquilo (lento, hueco amplio), Clásico (el ritmo original) o Intenso (rápido, hueco justo). Se recuerda tu elección.
+- **Elige tu ritmo** al pulsar para jugar: Tranquilo (lento, hueco amplio con minas, cohetes y minas flotantes), Clásico (el ritmo original) o Intenso (rápido, hueco justo). Se recuerda tu elección.
 - **La dificultad sube suavemente** con el tiempo de vuelo (curva logarítmica, tope a ~90 s): más velocidad y más frecuencia, pero el hueco nunca se estrecha.
 - **Hitbox justa**: la colisión es menor que el gráfico (~73 %), así no hay muertes "invisibles".
 - **Aviso de bordes**: si el orbe brilla en rojo, estás peligrosamente cerca del techo o del suelo.
@@ -56,7 +56,7 @@ flutter build apk --release
 
 ## Estructura
 
-- `lib/features/game/` — motor Flame (orbe, obstáculos, starfield), estados (dificultad, sonido, puntuación) y overlays (menú, HUD, cuenta atrás, pausa, game over, diálogos de ayuda y dificultad)
+- `lib/features/game/` — motor Flame (orbe, obstáculos, minas, cohetes, minas flotantes, starfield), estados (dificultad, sonido, puntuación) y overlays (menú, HUD, cuenta atrás, pausa, game over, diálogos de ayuda y dificultad)
 - `lib/features/home/` — pantalla principal y menú
 - `lib/features/missions/` — retos diarios/semanales y polvo astral
 - `lib/features/leaderboard/` — rankings
