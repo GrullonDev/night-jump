@@ -352,6 +352,7 @@ class NightJumpGame extends FlameGame with HasCollisionDetection, TapCallbacks {
         screenHeight: size.y,
         random: random,
         gapHeight: difficulty.value.gapHeight,
+        lowerOnly: difficulty.value == GameDifficulty.chill,
       );
       add(obstacle);
 
