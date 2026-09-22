@@ -6,7 +6,7 @@ flutter_launcher_icons:
   adaptive_icon_foreground: "assets/images/app_icon.png"
   remove_alpha_ios: true
   web:
-    generate: false
+    generate: true
   windows:
     generate: false
   macos:
