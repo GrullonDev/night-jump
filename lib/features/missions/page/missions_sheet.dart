@@ -164,7 +164,8 @@ class _MissionsContent extends StatelessWidget {
                         ),
                         const SizedBox(width: 4),
                         Text(
-                          'Reinicio en ${_formatCountdown(snapshot.timeUntilDailyReset)}',
+                          'Reinicio en '
+                          '${_formatCountdown(snapshot.timeUntilDailyReset)}',
                           style: TextStyle(
                             color: AppColor.slateGlow,
                             fontSize: 11,
@@ -237,7 +238,9 @@ class _MissionsContent extends StatelessWidget {
   String _formatCountdown(Duration duration) {
     final hours = duration.inHours;
     final minutes = duration.inMinutes % 60;
-    return '${hours.toString().padLeft(2, '0')}h ${minutes.toString().padLeft(2, '0')}m';
+    final hh = hours.toString().padLeft(2, '0');
+    final mm = minutes.toString().padLeft(2, '0');
+    return '${hh}h ${mm}m';
   }
 }
 

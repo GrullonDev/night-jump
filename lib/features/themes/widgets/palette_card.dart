@@ -52,10 +52,15 @@ class PaletteCard extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Row(
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 6,
+                      crossAxisAlignment: WrapCrossAlignment.center,
                       children: [
                         Text(
                           palette.name,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                           style: TextStyle(
                             color: AppColor.onSurface,
                             fontSize: 16,
@@ -63,7 +68,6 @@ class PaletteCard extends StatelessWidget {
                             fontFamily: 'Sora',
                           ),
                         ),
-                        const SizedBox(width: 8),
                         if (isActive)
                           _StatusBadge(
                             label: 'ACTIVO',
@@ -134,6 +138,9 @@ class _TrailingAction extends StatelessWidget {
         style: OutlinedButton.styleFrom(
           side: BorderSide(color: AppColor.electricCyan.withValues(alpha: 0.4)),
           foregroundColor: AppColor.electricCyan,
+          minimumSize: Size.zero,
+          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
         ),
         child: const Text(
           'PROBAR',

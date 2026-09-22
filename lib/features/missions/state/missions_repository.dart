@@ -25,6 +25,12 @@ class MissionsRepository {
     return prefs.getInt(_stardustKey) ?? 0;
   }
 
+  Future<void> addDust(int amount) async {
+    final prefs = await SharedPreferences.getInstance();
+    final current = prefs.getInt(_stardustKey) ?? 0;
+    await prefs.setInt(_stardustKey, current + amount);
+  }
+
   Future<bool> spendStardust(int amount) async {
     final prefs = await SharedPreferences.getInstance();
     final current = prefs.getInt(_stardustKey) ?? 0;
@@ -129,7 +135,8 @@ class MissionsRepository {
         icon: Icons.diamond_rounded,
         title: 'Maestro de la Gravedad',
         subtitle:
-            'Alcanza un total acumulado de $_weeklyScoreTarget puntos esta semana',
+            'Alcanza un total acumulado de $_weeklyScoreTarget '
+            'puntos esta semana',
         progress: weeklyScore,
         target: _weeklyScoreTarget,
         reward: 500,
@@ -190,8 +197,11 @@ class MissionsRepository {
     }
   }
 
-  String _dateKey(DateTime date) =>
-      '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
+  String _dateKey(DateTime date) {
+    final month = date.month.toString().padLeft(2, '0');
+    final day = date.day.toString().padLeft(2, '0');
+    return '${date.year}-$month-$day';
+  }
 
   String _weekKey(DateTime date) {
     final firstDayOfYear = DateTime(date.year, 1, 1);

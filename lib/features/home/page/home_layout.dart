@@ -12,29 +12,26 @@ class HomeLayout extends StatelessWidget {
     super.key,
     this.onTapToPlay,
     this.highScore = 0,
-    this.onTapRetos,
     this.onTapPalette,
-    this.onTapRanking,
     this.onTapSound,
     this.soundEnabled = true,
     this.onTapSettings,
+    this.onTapHelp,
   });
 
   final VoidCallback? onTapToPlay;
 
   final int highScore;
 
-  final VoidCallback? onTapRetos;
-
   final VoidCallback? onTapPalette;
-
-  final VoidCallback? onTapRanking;
 
   final VoidCallback? onTapSound;
 
   final bool soundEnabled;
 
   final VoidCallback? onTapSettings;
+
+  final VoidCallback? onTapHelp;
 
   @override
   Widget build(BuildContext context) {
@@ -55,6 +52,7 @@ class HomeLayout extends StatelessWidget {
                   soundEnabled,
                   onTapSound,
                   onTapSettings,
+                  onTapHelp,
                 ),
                 const SizedBox(height: 40),
                 _buildTitle(titleFontSize),
@@ -73,11 +71,7 @@ class HomeLayout extends StatelessWidget {
                 const SizedBox(height: 20),
                 HeadphoneIcon(),
                 const SizedBox(height: 30),
-                ButtonActions(
-                  onTapRetos: onTapRetos,
-                  onTapPalette: onTapPalette,
-                  onTapRanking: onTapRanking,
-                ),
+                ButtonActions(onTapPalette: onTapPalette),
                 const SizedBox(height: 24),
                 SeasonText(),
                 const SizedBox(height: 16),
@@ -95,6 +89,7 @@ Widget _buildHeader(
   bool soundEnabled,
   VoidCallback? onTapSound,
   VoidCallback? onTapSettings,
+  VoidCallback? onTapHelp,
 ) {
   return Row(
     children: [
@@ -142,6 +137,8 @@ Widget _buildHeader(
         soundEnabled ? Icons.volume_up_rounded : Icons.volume_off_rounded,
         onTapSound,
       ),
+      const SizedBox(width: 12),
+      _buildIconCircle(Icons.help_outline_rounded, onTapHelp),
       const SizedBox(width: 12),
       _buildIconCircle(Icons.settings_rounded, onTapSettings),
     ],
