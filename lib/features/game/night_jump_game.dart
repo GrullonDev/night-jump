@@ -90,6 +90,11 @@ class NightJumpGame extends FlameGame with HasCollisionDetection, TapCallbacks {
   double _spawnTimer = 0;
   double _flightSeconds = 0;
 
+  /// Discrete ramp step (0-5), derived from [_rampFactor]. HUD overlays
+  /// watch this to flash a subtle cue whenever difficulty ticks up.
+  final ValueNotifier<int> speedLevel = ValueNotifier<int>(0);
+  static const int _speedLevelSteps = 5;
+
   /// Gentle logarithmic ramp over ~90s of flight. 0.0 at take-off,
   /// 1.0 at 90s. Pauses automatically since [_flightSeconds] only
   /// advances while playing.
@@ -143,6 +148,7 @@ class NightJumpGame extends FlameGame with HasCollisionDetection, TapCallbacks {
     dustEarnedThisRun.value = 0;
     _spawnTimer = 0;
     _flightSeconds = 0;
+    speedLevel.value = 0;
     _obstaclesSinceLastGem = 0;
     _mineSpawnTimer = 0;
     _rocketSpawnTimer = 0;
@@ -385,6 +391,13 @@ class NightJumpGame extends FlameGame with HasCollisionDetection, TapCallbacks {
 
     _flightSeconds += dt;
     flightTime.value = Duration(milliseconds: (_flightSeconds * 1000).round());
+
+    final newSpeedLevel = (_rampFactor(_flightSeconds) * _speedLevelSteps)
+        .floor()
+        .clamp(0, _speedLevelSteps);
+    if (newSpeedLevel > speedLevel.value) {
+      speedLevel.value = newSpeedLevel;
+    }
 
     _spawnTimer += dt;
     if (_spawnTimer >= currentSpawnInterval) {

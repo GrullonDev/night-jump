@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'package:night_jump/features/game/night_jump_game.dart';
+import 'package:night_jump/features/game/state/game_difficulty.dart';
 import 'package:night_jump/utils/responsive/responsive_extension.dart';
 import 'package:night_jump/utils/theme/app_color.dart';
 
@@ -19,6 +20,10 @@ class HudOverlay extends StatelessWidget {
         ),
         child: Stack(
           children: [
+            Align(
+              alignment: Alignment.topCenter,
+              child: _SpeedUpCue(game: game),
+            ),
             Align(
               alignment: Alignment.topCenter,
               child: ValueListenableBuilder<int>(
@@ -124,6 +129,95 @@ class HudOverlay extends StatelessWidget {
               ),
             ),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Brief "speed up" flash shown in Chill mode whenever [NightJumpGame.speedLevel]
+/// ticks up, giving players a subtle cue that the pace just increased even
+/// though obstacles stay confined to the bottom of the screen.
+class _SpeedUpCue extends StatefulWidget {
+  const _SpeedUpCue({required this.game});
+
+  final NightJumpGame game;
+
+  @override
+  State<_SpeedUpCue> createState() => _SpeedUpCueState();
+}
+
+class _SpeedUpCueState extends State<_SpeedUpCue>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _controller = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 900),
+  );
+  late final Animation<double> _opacity = TweenSequence<double>([
+    TweenSequenceItem(tween: Tween(begin: 0, end: 1), weight: 25),
+    TweenSequenceItem(tween: ConstantTween(1), weight: 30),
+    TweenSequenceItem(tween: Tween(begin: 1, end: 0), weight: 45),
+  ]).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOut));
+
+  int _lastLevel = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    _lastLevel = widget.game.speedLevel.value;
+    widget.game.speedLevel.addListener(_onSpeedLevelChanged);
+  }
+
+  void _onSpeedLevelChanged() {
+    final level = widget.game.speedLevel.value;
+    if (level > _lastLevel &&
+        widget.game.difficulty.value == GameDifficulty.chill) {
+      _controller.forward(from: 0);
+    }
+    _lastLevel = level;
+  }
+
+  @override
+  void dispose() {
+    widget.game.speedLevel.removeListener(_onSpeedLevelChanged);
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return IgnorePointer(
+      child: FadeTransition(
+        opacity: _opacity,
+        child: Padding(
+          padding: const EdgeInsets.only(top: 64),
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+            decoration: BoxDecoration(
+              color: AppColor.shieldCyan.withValues(alpha: 0.18),
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(
+                color: AppColor.shieldCyan.withValues(alpha: 0.5),
+              ),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(Icons.speed_rounded, color: AppColor.shieldCyan, size: 14),
+                const SizedBox(width: 6),
+                Text(
+                  'RITMO EN AUMENTO',
+                  style: TextStyle(
+                    color: AppColor.shieldCyan,
+                    fontSize: 11,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: 0.3,
+                    fontFamily: 'Space Grotesk',
+                  ),
+                ),
+              ],
+            ),
+          ),
         ),
       ),
     );
