@@ -7,13 +7,16 @@ atraviesa el hueco entre las barras de neón y suma un punto por cada obstáculo
 
 - **Toca en cualquier lugar para saltar.** Al empezar verás una cuenta atrás de 3-2-1-¡GO! para prepararte.
 - **Elige tu ritmo** al pulsar para jugar: Tranquilo (lento, hueco amplio con minas, cohetes y minas flotantes), Clásico (el ritmo original) o Intenso (rápido, hueco justo). Se recuerda tu elección.
-- **La dificultad sube suavemente** con el tiempo de vuelo (curva logarítmica, tope a ~90 s): más velocidad y más frecuencia, pero el hueco nunca se estrecha.
+- **La dificultad sube suavemente** con el tiempo de vuelo (curva logarítmica, tope a ~90 s): más velocidad y más frecuencia, pero el hueco nunca se estrecha. En modo Tranquilo aparece un aviso visual breve cada vez que el ritmo acelera, para que el cambio nunca sea una sorpresa.
+- **Escudos**: en Tranquilo se otorga un escudo automático al llegar a cierto puntaje (entre 10 y 20 puntos); en Clásico e Intenso el primero llega en el 4.º obstáculo superado y luego cada 5, acumulables. Al chocar con al menos un escudo disponible, un diálogo con cuenta atrás te deja decidir si lo usas para continuar; sin escudos, se va directo a Game Over.
 - **Hitbox justa**: la colisión es menor que el gráfico (~73 %), así no hay muertes "invisibles".
 - **Aviso de bordes**: si el orbe brilla en rojo, estás peligrosamente cerca del techo o del suelo.
 - **Pausa cuando quieras** con el botón superior derecho (cambia a ▶ en pausa) y continúa donde lo dejaste.
 - **Sonido neón** generado proceduralmente: salto, punto, GO, game over y clics de menú. Se puede silenciar en ajustes.
-- **Guía inicial**: la primera vez se muestra un diálogo de "Cómo jugar", recuperable con el icono de ayuda (?).
-- **Progreso local y sin conexión**: récord, misiones y temas viven en el dispositivo; el juego funciona sin internet.
+- **Transiciones suaves**: el menú aparece con un fundido (fade-in) al volver desde la partida, sin cortes bruscos.
+- **Guía inicial**: la primera vez se muestra un diálogo de "Cómo jugar", recuperable con el icono de ayuda (?), que explica el control, los escudos y cómo se ganan y canjean los Polvos Estelares por temas visuales.
+- **Pantalla de Game Over detallada**: desglosa puntaje final, récord (con insignia de "¡Nuevo récord!" si aplica), tiempo de vuelo, obstáculos superados y Polvos Estelares ganados en esa partida.
+- **Progreso local y sin conexión**: el récord se guarda por separado para cada dificultad (Tranquilo, Clásico, Intenso), junto con los Polvos Estelares acumulados y los temas visuales desbloqueados; todo vive en el dispositivo y el juego funciona sin internet, sin llamadas a red ni servicios en la nube.
 
 ## Estética visual
 
