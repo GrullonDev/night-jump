@@ -121,12 +121,12 @@ class NightJumpGame extends FlameGame with HasCollisionDetection, TapCallbacks {
   @override
   Future<void> onLoad() async {
     await super.onLoad();
-    highScore.value = await scoreRepository.getHighScore();
     soundEnabled.value = await settingsRepository.getSoundEnabled();
     hapticsEnabled.value = await settingsRepository.getHapticsEnabled();
     difficulty.value = GameDifficultyX.fromId(
       await settingsRepository.getDifficultyId(),
     );
+    highScore.value = await scoreRepository.getHighScore(difficulty.value);
     await refreshTheme();
     await sound.preload();
 
@@ -288,6 +288,7 @@ class NightJumpGame extends FlameGame with HasCollisionDetection, TapCallbacks {
   Future<void> setDifficulty(GameDifficulty value) async {
     difficulty.value = value;
     await settingsRepository.setDifficultyId(value.id);
+    highScore.value = await scoreRepository.getHighScore(value);
   }
 
   /// Re-reads the gallery choices (palette + comfort) after the player
@@ -330,7 +331,10 @@ class NightJumpGame extends FlameGame with HasCollisionDetection, TapCallbacks {
     overlays.remove(shieldDialogueOverlay);
     sound.gameOver();
 
-    final beatHighScore = await scoreRepository.saveScoreIfHigh(score.value);
+    final beatHighScore = await scoreRepository.saveScoreIfHigh(
+      difficulty.value,
+      score.value,
+    );
     isNewHighScore.value = beatHighScore;
     if (beatHighScore) highScore.value = score.value;
     await missionsRepository.recordRunFinished(obstaclesCleared: score.value);
@@ -473,11 +477,7 @@ class NightJumpGame extends FlameGame with HasCollisionDetection, TapCallbacks {
     final mineY = minY + random.nextDouble() * (maxY - minY);
     final mineX = size.x + 40 + random.nextDouble() * 80;
 
-    add(
-      MineComponent(
-        position: Vector2(mineX, mineY),
-      ),
-    );
+    add(MineComponent(position: Vector2(mineX, mineY)));
   }
 
   void _spawnRocket() {
@@ -485,12 +485,7 @@ class NightJumpGame extends FlameGame with HasCollisionDetection, TapCallbacks {
     final rocketX = size.x + 40 + random.nextDouble() * 60;
     final rocketY = orb.position.y;
 
-    add(
-      RocketComponent(
-        position: Vector2(rocketX, rocketY),
-        targetY: rocketY,
-      ),
-    );
+    add(RocketComponent(position: Vector2(rocketX, rocketY), targetY: rocketY));
   }
 
   void _spawnFloatingMine() {
@@ -518,13 +513,11 @@ class NightJumpGame extends FlameGame with HasCollisionDetection, TapCallbacks {
     final gapBottom = obstacle.gapCenterY + obstacle.gapHeight / 2;
     final margin = 30.0;
     final gemY =
-        gapTop + margin + random.nextDouble() * (gapBottom - gapTop - margin * 2);
+        gapTop +
+        margin +
+        random.nextDouble() * (gapBottom - gapTop - margin * 2);
 
-    add(
-      ShieldGemComponent(
-        position: Vector2(gemX, gemY),
-      ),
-    );
+    add(ShieldGemComponent(position: Vector2(gemX, gemY)));
   }
 
   @override

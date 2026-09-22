@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import 'package:night_jump/features/game/state/game_difficulty.dart';
 import 'package:night_jump/features/game/state/score_repository.dart';
 import 'package:night_jump/features/leaderboard/state/leaderboard_entry.dart';
 import 'package:night_jump/features/leaderboard/state/leaderboard_snapshot.dart';
@@ -95,7 +96,10 @@ class LeaderboardRepository {
   Future<LeaderboardSnapshot> loadSnapshot({
     LeaderboardTab tab = LeaderboardTab.global,
   }) async {
-    final highScore = await scoreRepository.getHighScore();
+    final scoresByDifficulty = await Future.wait(
+      GameDifficulty.values.map(scoreRepository.getHighScore),
+    );
+    final highScore = scoresByDifficulty.fold(0, (a, b) => a > b ? a : b);
 
     final roster = switch (tab) {
       LeaderboardTab.global => _sampleRoster,
