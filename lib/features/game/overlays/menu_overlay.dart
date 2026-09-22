@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:night_jump/features/game/night_jump_game.dart';
 import 'package:night_jump/features/game/overlays/difficulty_dialog.dart';
 import 'package:night_jump/features/game/overlays/how_to_play_dialog.dart';
+import 'package:night_jump/features/game/overlays/soft_entrance.dart';
 import 'package:night_jump/features/home/page/home_page.dart';
 import 'package:night_jump/features/settings/page/settings_sheet.dart';
 import 'package:night_jump/features/themes/page/theme_gallery_page.dart';
@@ -59,27 +60,29 @@ class _MenuOverlayState extends State<MenuOverlay> {
         return ValueListenableBuilder<bool>(
           valueListenable: game.soundEnabled,
           builder: (context, soundEnabled, _) {
-            return HomePage(
-              onTapToPlay: _askDifficultyThenPlay,
-              highScore: highScore,
-              onTapPalette: () async {
-                await Navigator.of(context).push(
-                  MaterialPageRoute(
-                    builder: (context) => ThemeGalleryPage(
-                      themeRepository: game.themeRepository,
-                      missionsRepository: game.missionsRepository,
-                      settingsRepository: game.settingsRepository,
+            return SoftEntrance(
+              child: HomePage(
+                onTapToPlay: _askDifficultyThenPlay,
+                highScore: highScore,
+                onTapPalette: () async {
+                  await Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (context) => ThemeGalleryPage(
+                        themeRepository: game.themeRepository,
+                        missionsRepository: game.missionsRepository,
+                        settingsRepository: game.settingsRepository,
+                      ),
                     ),
-                  ),
-                );
-                // Gallery edits SharedPreferences directly; pull the
-                // choices into the running game before the next run.
-                game.refreshTheme();
-              },
-              soundEnabled: soundEnabled,
-              onTapSound: game.toggleSound,
-              onTapSettings: () => showSettingsSheet(context, game),
-              onTapHelp: _showHowToPlayNow,
+                  );
+                  // Gallery edits SharedPreferences directly; pull the
+                  // choices into the running game before the next run.
+                  game.refreshTheme();
+                },
+                soundEnabled: soundEnabled,
+                onTapSound: game.toggleSound,
+                onTapSettings: () => showSettingsSheet(context, game),
+                onTapHelp: _showHowToPlayNow,
+              ),
             );
           },
         );
