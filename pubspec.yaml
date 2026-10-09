@@ -1,5 +1,5 @@
 name: night_jump
-description: "A new Flutter project."
+description: "Arcade nocturno sin conexión: salta, supera récords y desbloquea temas."
 
 publish_to: 'none' 
 
@@ -16,6 +16,7 @@ dependencies:
   shared_preferences: ^2.5.5
   flame_audio: ^2.12.2
   audioplayers: ^6.8.1
+  share_plus: ^13.3.1
 
 dev_dependencies:
   flutter_test:
@@ -25,6 +26,14 @@ dev_dependencies:
   flutter_launcher_icons: ^0.14.3
 
 flutter:
+
+  fonts:
+    - family: Sora
+      fonts:
+        - asset: assets/fonts/Sora.ttf
+    - family: Space Grotesk
+      fonts:
+        - asset: assets/fonts/SpaceGrotesk.ttf
 
   uses-material-design: true
 
