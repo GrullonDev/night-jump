@@ -4,6 +4,7 @@
 *.pyc
 *.swp
 .DS_Store
+._*
 .atom/
 .build/
 .buildlog/
@@ -54,3 +55,8 @@ pubspec.lock
 
 # FVM Version Cache
 .fvm/
+
+# Private distribution credentials
+android/key.properties
+*.jks
+*.keystore

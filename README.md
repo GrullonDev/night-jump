@@ -1,78 +1,107 @@
-# Night Jump
+# Night Jump 1.0
 
-Un juego rápido, directo y fluido pensado para sesiones nocturnas. Toca para saltar,
-atraviesa el hueco entre las barras de neón y suma un punto por cada obstáculo superado.
+Arcade nocturno sin conexión para Android e iOS. Toca para saltar, supera tu
+récord, completa misiones, gana Stardust, desbloquea temas y comparte tu vuelo.
 
-## Cómo se juega
+## Cómo jugar
 
-- **Toca en cualquier lugar para saltar.** Al empezar verás una cuenta atrás de 3-2-1-¡GO! para prepararte.
-- **Elige tu ritmo** al pulsar para jugar: Tranquilo (lento, hueco amplio con minas, cohetes y minas flotantes), Clásico (el ritmo original) o Intenso (rápido, hueco justo). Se recuerda tu elección.
-- **La dificultad sube suavemente** con el tiempo de vuelo (curva logarítmica, tope a ~90 s): más velocidad y más frecuencia, pero el hueco nunca se estrecha. En modo Tranquilo aparece un aviso visual breve cada vez que el ritmo acelera, para que el cambio nunca sea una sorpresa.
-- **Escudos**: en Tranquilo se otorga un escudo automático al llegar a cierto puntaje (entre 10 y 20 puntos); en Clásico e Intenso el primero llega en el 4.º obstáculo superado y luego cada 5, acumulables. Al chocar con al menos un escudo disponible, un diálogo con cuenta atrás te deja decidir si lo usas para continuar; sin escudos, se va directo a Game Over.
-- **Hitbox justa**: la colisión es menor que el gráfico (~73 %), así no hay muertes "invisibles".
-- **Aviso de bordes**: si el orbe brilla en rojo, estás peligrosamente cerca del techo o del suelo.
-- **Pausa cuando quieras** con el botón superior derecho (cambia a ▶ en pausa) y continúa donde lo dejaste.
-- **Sonido neón** generado proceduralmente: salto, punto, GO, game over y clics de menú. Se puede silenciar en ajustes.
-- **Transiciones suaves**: el menú aparece con un fundido (fade-in) al volver desde la partida, sin cortes bruscos.
-- **Guía inicial**: la primera vez se muestra un diálogo de "Cómo jugar", recuperable con el icono de ayuda (?), que explica el control, los escudos y cómo se ganan y canjean los Polvos Estelares por temas visuales.
-- **Pantalla de Game Over detallada**: desglosa puntaje final, récord (con insignia de "¡Nuevo récord!" si aplica), tiempo de vuelo, obstáculos superados y Polvos Estelares ganados en esa partida.
-- **Progreso local y sin conexión**: el récord se guarda por separado para cada dificultad (Tranquilo, Clásico, Intenso), junto con los Polvos Estelares acumulados y los temas visuales desbloqueados; todo vive en el dispositivo y el juego funciona sin internet, sin llamadas a red ni servicios en la nube.
+La primera partida ofrece una práctica jugable: toca para saltar y supera tres
+barreras fáciles. No entrega moneda ni récords y permite recuperarte sin perder.
+Ayuda (?) permite repetirla. Al completarla se recuerda en el dispositivo.
 
-## Estética visual
+- Tranquilo: velocidad baja, huecos amplios, pocas barreras y sin peligros extra.
+- Clásico: experiencia principal con progresión suave.
+- Intenso: mayor velocidad y encuentros anunciados con minas, cohetes y minas
+  flotantes. Se mantienen fuera del corredor central seguro.
+- Cada barrera superada entrega un punto y un Stardust. Las gemas verdes
+  recargan escudos (máximo tres); comienzas con uno.
+- Al chocar, un escudo se consume automáticamente, limpia los peligros y
+  protege durante 1,5 segundos de juego. El halo y el contador explican el estado.
+- La pausa y el bloqueo de pantalla congelan la partida, la protección y la
+  cuenta atrás. Al volver debes pulsar Continuar.
+- Los resultados ofrecen Jugar otra vez (mismo modo, sin tutorial ni cuenta
+  atrás), Compartir resultado e Inicio. Incluyen causa del choque y misiones.
 
-- **Contraste alto**: fondo oscuro y frío que hace resaltar intensamente al jugador y los obstáculos, dibujados con colores neón brillantes.
-- **Movimiento suave**: sin tirones ni saltos de frames, para no cansar la vista durante partidas largas.
-- **Interacción clara**: los elementos con los que el jugador interactúa (personaje, obstáculos) siempre destacan sobre el fondo gracias al contraste de color y brillo.
+## Progreso y balance
 
-## Requisitos
+Mis récords muestra Tranquilo, Clásico e Intenso por separado. No hay rivales
+simulados, amigos, ligas, temporadas ni clasificaciones globales.
 
-- [Flutter SDK](https://docs.flutter.dev/get-started/install) (canal estable, Dart SDK `^3.13.1` — ver `pubspec.yaml`)
-- Un dispositivo, emulador o navegador soportado por Flutter (Android, iOS, Web, Windows, macOS, Linux)
+Las tres misiones diarias se conservan: 30 obstáculos (+150), tres partidas
+(+80) y diez obstáculos en una partida (+100). La misión semanal pide 210
+obstáculos (+500) y se reinicia el lunes. La moneda única es Stardust.
 
-## Configuración del proyecto
+Se conservan los cuatro temas: Default y Cyberpunk gratuitos; Aurora cuesta
+200 y Eclipse 500. Un día con las tres misiones otorga 330 más los obstáculos.
+Con partidas casuales de 6–10 puntos, el primer tema pagado es alcanzable en
+aproximadamente 4–5 partidas; 210 por semana equivale a siete objetivos diarios
+de 30. Son valores razonados para 1.0; la duración real y diversión todavía
+deben revisarse mediante pruebas con jugadores.
 
-Clonar el repositorio e instalar las dependencias:
+El balance del motor está centralizado en
+`lib/features/game/state/game_difficulty.dart`. `gate_planner.dart` usa gravedad,
+impulso, tamaño de colisión y tiempo entre barreras para limitar los cambios del
+corredor. Las pruebas verifican una trayectoria repetible y atravesable en
+1.000 barreras por modo. El área lógica de juego es 400 × 720 y se ajusta sin
+deformación a la pantalla; se usan márgenes en formatos anchos.
+
+## Migración y persistencia
+
+La primera lectura copia las claves existentes al documento versionado
+`night_jump.progress.v1`. Récords por modo, Stardust, misiones, recompensas ya
+cobradas y temas seleccionados/desbloqueados se conservan. Las claves anteriores
+quedan intactas como referencia; la nueva versión usa el documento migrado.
+
+Un récord antiguo `night_jump.high_score` sin modo se muestra como “Récord
+anterior sin modo”. No se asigna arbitrariamente a una dificultad. El objetivo
+semanal cambia sin borrar el progreso vigente ni recompensas ya cobradas; la
+clave semanal anterior se convierte al lunes correspondiente.
+
+Saldo, recompensas y compras usan una cola compartida entre repositorios.
+Cobrar una misión y marcarla cobrada forma una sola escritura. Cobrar un tema y
+desbloquearlo también. Repetir la compra no vuelve a cobrar. Un resultado tiene
+identificador de partida para impedir su registro repetido. Stardust por barrera
+se guarda durante el vuelo; misiones y récords se registran al finalizar.
+
+`settings.tutorial_completed.v1` recuerda la práctica completada. La antigua
+`settings.how_to_play_seen` solo representaba un diálogo abierto y no se toma
+como práctica completada. Restablecer progreso conserva preferencias y la nueva
+marca de tutorial, pero elimina récords, moneda, misiones y temas pagados.
+
+## Compartir
+
+Se exporta un PNG independiente de 1080 × 1350 con Night Jump, puntuación, modo,
+récord personal, “Can you beat me?” y atribución a GrullonDev. Funciona sin
+conexión y no presenta resultados locales como ranking global.
+
+No se ha configurado una URL pública de descarga. La imagen se comparte sin
+enlace. `ResultShareService.verifiedDownloadUrl` debe permanecer vacía hasta
+verificar una URL real de descarga o prueba. iPad recibe el rectángulo real del
+botón para anclar correctamente la hoja de compartir.
+
+Sora y Space Grotesk están incluidas, con sus licencias OFL; no se descargan
+fuentes al jugar.
+
+## Desarrollo y validación
+
+Flutter 3.47 / Dart 3.13, Flame, shared_preferences y audio local.
 
 ```bash
-git clone https://github.com/Jorge-Tropigas/night-jump.git
-cd night_jump
+git clone https://github.com/GrullonDev/night-jump.git
+cd night-jump
 flutter pub get
-```
-
-Ejecutar la app en modo debug:
-
-```bash
 flutter run
+flutter analyze
+flutter test --coverage
 ```
 
-Ejecutar los tests:
+En volúmenes externos de macOS, los archivos AppleDouble `._*` pueden romper
+la búsqueda de tests y el procesamiento de recursos Android. El flujo
+reproducible usa una copia temporal local y conserva el bundle para revisarlo:
 
 ```bash
-flutter test
+bash tool/validate_release.sh
 ```
 
-Generar un build de release (ejemplo Android):
-
-```bash
-flutter build apk --release
-```
-
-## Estructura
-
-- `lib/features/game/` — motor Flame (orbe, obstáculos, minas, cohetes, minas flotantes, starfield), estados (dificultad, sonido, puntuación) y overlays (menú, HUD, cuenta atrás, pausa, game over, diálogos de ayuda y dificultad)
-- `lib/features/home/` — pantalla principal y menú
-- `lib/features/missions/` — retos diarios/semanales y polvo astral
-- `lib/features/leaderboard/` — rankings
-- `lib/features/themes/` — galería de paletas neón
-- `lib/features/settings/` — ajustes (sonido, vibración, restablecer progreso)
-- `lib/utils/` — tema, colores y responsive
-- `assets/images/` — icono y gráficos
-- `assets/audio/` — efectos de sonido procedurales (`jump`, `score`, `go`, `game_over`, `ui` en WAV)
-- `test/` — pruebas unitarias y de widgets
-- `pubspec.yaml` — dependencias y configuración del paquete
-
-## Recursos de Flutter
-
-- [Learn Flutter](https://docs.flutter.dev/get-started/learn-flutter)
-- [Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Flutter learning resources](https://docs.flutter.dev/reference/learning-resources)
+Consulta [docs/RELEASE_1_0.md](docs/RELEASE_1_0.md) para firmas, resultados de
+validación y comprobaciones pendientes antes de distribución.

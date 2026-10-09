@@ -1,7 +1,15 @@
+import java.util.Properties
+
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
     id("dev.flutter.flutter-gradle-plugin")
+}
+
+val releaseKeys = Properties()
+val releaseKeysFile = rootProject.file("key.properties")
+if (releaseKeysFile.exists()) {
+    releaseKeysFile.inputStream().use { releaseKeys.load(it) }
 }
 
 android {
@@ -35,10 +43,22 @@ android {
         }
     }
 
+    signingConfigs {
+        if (releaseKeysFile.exists()) {
+            create("release") {
+                keyAlias = releaseKeys.getProperty("keyAlias")
+                keyPassword = releaseKeys.getProperty("keyPassword")
+                storeFile = file(releaseKeys.getProperty("storeFile"))
+                storePassword = releaseKeys.getProperty("storePassword")
+            }
+        }
+    }
+
     buildTypes {
         release {
 
-            signingConfig = signingConfigs.getByName("debug")
+            // Without private credentials this is an unsigned validation build.
+            signingConfig = if (releaseKeysFile.exists()) signingConfigs.getByName("release") else null
         }
     }
 }
