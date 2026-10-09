@@ -10,16 +10,18 @@ import 'package:night_jump/features/game/components/obstacle_component.dart';
 import 'package:night_jump/features/game/night_jump_game.dart';
 import 'package:night_jump/features/game/state/game_status.dart';
 import 'package:night_jump/utils/theme/app_color.dart';
+import 'package:night_jump/features/game/state/gate_planner.dart';
 
 class OrbComponent extends PositionComponent
     with CollisionCallbacks, HasGameReference<NightJumpGame> {
   static const double visualRadius = 22;
   static const double hitboxRadius = 16;
-  static const double gravity = 900;
-  static const double jumpVelocity = -320;
+  static const double gravity = GatePlanner.gravity;
+  static const double jumpVelocity = GatePlanner.jumpVelocity;
   static const double edgeDangerMargin = 80;
 
   double velocityY = 0;
+  double _jumpFlash = 0;
   double _dangerRatio = 0;
   double _pulseTime = 0;
   double _shieldPulseTime = 0;
@@ -46,6 +48,7 @@ class OrbComponent extends PositionComponent
 
   void jump() {
     velocityY = jumpVelocity;
+    _jumpFlash = 0.16;
     game.sound.jump();
     if (game.hapticsEnabled.value) {
       HapticFeedback.lightImpact();
@@ -55,7 +58,8 @@ class OrbComponent extends PositionComponent
   @override
   void update(double dt) {
     super.update(dt);
-    if (game.status != GameStatus.playing) return;
+    if (game.status != GameStatus.playing || game.waitingForTutorialTap) return;
+    _jumpFlash = max(0, _jumpFlash - dt);
 
     velocityY += gravity * dt;
     position.y += velocityY * dt;
@@ -76,13 +80,8 @@ class OrbComponent extends PositionComponent
     if (position.y - visualRadius <= 0 ||
         position.y + visualRadius >= game.size.y) {
       position.y = position.y.clamp(visualRadius, game.size.y - visualRadius);
-      if (game.shieldActive.value) {
-        game.deactivateShield();
-        _shieldFlashActive = true;
-        _shieldFlashTimer = 0.3;
-      } else {
-        game.endGame();
-      }
+      game.hit(position.y <= visualRadius ? 'Techo' : 'Suelo');
+      if (game.shieldActive.value) velocityY = 0;
     } else {
       // Danger ratio (0.0 to 1.0) from proximity
       // to the top/bottom edges.
@@ -107,16 +106,7 @@ class OrbComponent extends PositionComponent
   ) {
     super.onCollisionStart(intersectionPoints, other);
     if (other is ObstacleComponent && game.status == GameStatus.playing) {
-      if (game.shieldActive.value) {
-        // Shield absorbs the hit
-        game.deactivateShield();
-        _shieldFlashActive = true;
-        _shieldFlashTimer = 0.3;
-        game.sound.score();
-      } else {
-        // No shield - offer shield dialogue or end game
-        game.showShieldOffer();
-      }
+      game.hit('Barrera');
     }
   }
 
@@ -127,11 +117,22 @@ class OrbComponent extends PositionComponent
     final dimmed = game.comfortDim.value;
     final glowScale = dimmed ? 0.55 : 1.0;
 
+    if (_jumpFlash > 0) {
+      canvas.drawCircle(
+        center,
+        visualRadius + (0.16 - _jumpFlash) * 90,
+        Paint()
+          ..color = palette.primary.withValues(alpha: _jumpFlash * 4)
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 2,
+      );
+    }
+
     // Shield halo effect
     if (game.shieldActive.value) {
       final shieldPulse = 0.7 + 0.3 * sin(_shieldPulseTime);
       final shieldRadius = visualRadius * 2.0 * shieldPulse;
-      
+
       // Outer shield glow
       canvas.drawCircle(
         center,
@@ -157,7 +158,8 @@ class OrbComponent extends PositionComponent
         canvas.drawCircle(
           Offset(particleX, particleY),
           2 * shieldPulse,
-          Paint()..color = AppColor.shieldCyan.withValues(alpha: 0.8 * shieldPulse),
+          Paint()
+            ..color = AppColor.shieldCyan.withValues(alpha: 0.8 * shieldPulse),
         );
       }
     }

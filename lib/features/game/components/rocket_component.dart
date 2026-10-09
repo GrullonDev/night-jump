@@ -22,11 +22,11 @@ class RocketComponent extends PositionComponent
   final double targetY;
 
   RocketComponent({required Vector2 position, required this.targetY})
-      : super(
-          position: position,
-          size: Vector2(rocketWidth, rocketHeight),
-          anchor: Anchor.center,
-        );
+    : super(
+        position: position,
+        size: Vector2(rocketWidth, rocketHeight),
+        anchor: Anchor.center,
+      );
 
   @override
   Future<void> onLoad() async {
@@ -68,13 +68,7 @@ class RocketComponent extends PositionComponent
   ) {
     super.onCollisionStart(intersectionPoints, other);
     if (other == game.orb && game.status == GameStatus.playing) {
-      if (game.shieldActive.value) {
-        game.deactivateShield();
-        game.sound.score();
-        removeFromParent();
-      } else {
-        game.endGame();
-      }
+      game.hit('Cohete');
     }
   }
 
@@ -94,16 +88,12 @@ class RocketComponent extends PositionComponent
 
     // Flame trail
     final flamePaint = Paint()
-      ..shader = const LinearGradient(
-        colors: [AppColor.error, Color(0xFFFF6B00), Color(0xFFFFD600)],
-      ).createShader(
-        Rect.fromLTWH(
-          center.dx - 2,
-          center.dy - 5,
-          rocketWidth * 0.45,
-          10,
-        ),
-      );
+      ..shader =
+          const LinearGradient(
+            colors: [AppColor.error, Color(0xFFFF6B00), Color(0xFFFFD600)],
+          ).createShader(
+            Rect.fromLTWH(center.dx - 2, center.dy - 5, rocketWidth * 0.45, 10),
+          );
     final flamePath = Path()
       ..moveTo(center.dx - 2, center.dy - 5)
       ..lineTo(center.dx - rocketWidth * 0.4, center.dy)
@@ -113,16 +103,17 @@ class RocketComponent extends PositionComponent
 
     // Rocket body (elongated diamond/arrow shape)
     final bodyPaint = Paint()
-      ..shader = const LinearGradient(
-        colors: [Color(0xFFFFD600), Color(0xFFFF6B00), AppColor.error],
-      ).createShader(
-        Rect.fromLTWH(
-          center.dx - rocketWidth / 2,
-          center.dy - rocketHeight / 2,
-          rocketWidth,
-          rocketHeight,
-        ),
-      );
+      ..shader =
+          const LinearGradient(
+            colors: [Color(0xFFFFD600), Color(0xFFFF6B00), AppColor.error],
+          ).createShader(
+            Rect.fromLTWH(
+              center.dx - rocketWidth / 2,
+              center.dy - rocketHeight / 2,
+              rocketWidth,
+              rocketHeight,
+            ),
+          );
     final bodyPath = Path()
       ..moveTo(center.dx + rocketWidth / 2, center.dy) // nose tip
       ..lineTo(center.dx + 4, center.dy - rocketHeight / 2) // top edge

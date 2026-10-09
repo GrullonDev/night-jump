@@ -20,11 +20,11 @@ class MineComponent extends PositionComponent
   double _rotationAngle = 0;
 
   MineComponent({required Vector2 position})
-      : super(
-          position: position,
-          size: Vector2.all(mineRadius * 2),
-          anchor: Anchor.center,
-        );
+    : super(
+        position: position,
+        size: Vector2.all(mineRadius * 2),
+        anchor: Anchor.center,
+      );
 
   @override
   Future<void> onLoad() async {
@@ -55,15 +55,7 @@ class MineComponent extends PositionComponent
   ) {
     super.onCollisionStart(intersectionPoints, other);
     if (other == game.orb && game.status == GameStatus.playing) {
-      if (game.shieldActive.value) {
-        // Shield absorbs the mine
-        game.deactivateShield();
-        game.sound.score();
-        removeFromParent();
-      } else {
-        // No shield - game over
-        game.endGame();
-      }
+      game.hit('Mina');
     }
   }
 
@@ -93,14 +85,9 @@ class MineComponent extends PositionComponent
     // Mine body (dark core with red rim)
     final bodyPaint = Paint()
       ..shader = RadialGradient(
-        colors: [
-          AppColor.canvasBase,
-          AppColor.errorContainer,
-        ],
+        colors: [AppColor.canvasBase, AppColor.errorContainer],
         stops: const [0.0, 1.0],
-      ).createShader(
-        Rect.fromCircle(center: center, radius: mineRadius),
-      );
+      ).createShader(Rect.fromCircle(center: center, radius: mineRadius));
     canvas.drawCircle(center, mineRadius, bodyPaint);
 
     // Red ring

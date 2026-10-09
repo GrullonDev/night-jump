@@ -1,10 +1,10 @@
 import 'dart:math';
+import 'dart:ui' show AppLifecycleState;
 
 import 'package:flutter/foundation.dart';
-
 import 'package:flame/events.dart';
 import 'package:flame/game.dart';
-
+import 'package:flame/components.dart';
 import 'package:night_jump/features/game/components/floating_mine_component.dart';
 import 'package:night_jump/features/game/components/mine_component.dart';
 import 'package:night_jump/features/game/components/obstacle_component.dart';
@@ -14,9 +14,11 @@ import 'package:night_jump/features/game/components/shield_gem_component.dart';
 import 'package:night_jump/features/game/components/starfield_component.dart';
 import 'package:night_jump/features/game/state/game_difficulty.dart';
 import 'package:night_jump/features/game/state/game_status.dart';
+import 'package:night_jump/features/game/state/gate_planner.dart';
 import 'package:night_jump/features/game/state/score_repository.dart';
 import 'package:night_jump/features/game/state/sound_service.dart';
 import 'package:night_jump/features/missions/state/missions_repository.dart';
+import 'package:night_jump/features/missions/state/missions_snapshot.dart';
 import 'package:night_jump/features/settings/state/settings_repository.dart';
 import 'package:night_jump/features/themes/state/neon_palette.dart';
 import 'package:night_jump/features/themes/state/theme_repository.dart';
@@ -30,93 +32,70 @@ class NightJumpGame extends FlameGame with HasCollisionDetection, TapCallbacks {
   }) : scoreRepository = scoreRepository ?? ScoreRepository(),
        missionsRepository = missionsRepository ?? MissionsRepository(),
        settingsRepository = settingsRepository ?? SettingsRepository(),
-       themeRepository = themeRepository ?? ThemeRepository();
+       themeRepository = themeRepository ?? ThemeRepository() {
+    // App resume must wait for the player's explicit action.
+    pauseWhenBackgrounded = false;
+  }
 
-  static const String menuOverlay = 'menu';
-  static const String hudOverlay = 'hud';
-  static const String gameOverOverlay = 'gameOver';
-  static const String countdownOverlay = 'countdown';
-  static const String pauseOverlay = 'pause';
-  static const String shieldDialogueOverlay = 'shieldDialogue';
-
+  static const menuOverlay = 'menu',
+      hudOverlay = 'hud',
+      gameOverOverlay = 'gameOver',
+      countdownOverlay = 'countdown',
+      pauseOverlay = 'pause';
   final ScoreRepository scoreRepository;
   final MissionsRepository missionsRepository;
   final SettingsRepository settingsRepository;
   final ThemeRepository themeRepository;
-  final Random random = Random();
-
-  final ValueNotifier<int> score = ValueNotifier<int>(0);
-  final ValueNotifier<int> highScore = ValueNotifier<int>(0);
-  final ValueNotifier<bool> isNewHighScore = ValueNotifier<bool>(false);
-  final ValueNotifier<GameDifficulty> difficulty =
-      ValueNotifier<GameDifficulty>(GameDifficulty.classic);
-  final ValueNotifier<bool> isPaused = ValueNotifier<bool>(false);
-  final ValueNotifier<Duration> flightTime = ValueNotifier<Duration>(
-    Duration.zero,
+  final random = Random();
+  final score = ValueNotifier<int>(0), highScore = ValueNotifier<int>(0);
+  final isNewHighScore = ValueNotifier<bool>(false),
+      isPaused = ValueNotifier<bool>(false);
+  final difficulty = ValueNotifier<GameDifficulty>(GameDifficulty.classic);
+  final flightTime = ValueNotifier<Duration>(Duration.zero);
+  final soundEnabled = ValueNotifier<bool>(true),
+      hapticsEnabled = ValueNotifier<bool>(true);
+  final palette = ValueNotifier<NeonPalette>(NeonPalette.catalog.first);
+  final comfortDim = ValueNotifier<bool>(false);
+  final shieldCount = ValueNotifier<int>(0);
+  final shieldActive = ValueNotifier<bool>(false);
+  final dustEarnedThisRun = ValueNotifier<int>(0);
+  final speedLevel = ValueNotifier<int>(0);
+  final cue = ValueNotifier<String>('');
+  final tutorial = ValueNotifier<bool>(false);
+  late final sound = SoundService(
+    isEnabled: () => soundEnabled.value && !_background && !_disposed,
   );
-  final ValueNotifier<bool> soundEnabled = ValueNotifier<bool>(true);
-  final ValueNotifier<bool> hapticsEnabled = ValueNotifier<bool>(true);
-  final ValueNotifier<NeonPalette> palette = ValueNotifier<NeonPalette>(
-    NeonPalette.catalog.first,
-  );
-  final ValueNotifier<bool> comfortDim = ValueNotifier<bool>(false);
-
-  // ── Shield System ──
-  final ValueNotifier<int> shieldCount = ValueNotifier<int>(0);
-  final ValueNotifier<bool> shieldActive = ValueNotifier<bool>(false);
-  final ValueNotifier<bool> showShieldDialogue = ValueNotifier<bool>(false);
-  int _obstaclesSinceLastGem = 0;
-  bool _chillShieldGranted = false;
-
-  // ── Run Stats ──
-  final ValueNotifier<int> dustEarnedThisRun = ValueNotifier<int>(0);
-
-  // ── Mine System (Tranquilo only) ──
-  double _mineSpawnTimer = 0;
-
-  // ── Rocket System (Tranquilo only) ──
-  double _rocketSpawnTimer = 0;
-
-  // ── Floating Mine System (Tranquilo only) ──
-  double _floatingMineSpawnTimer = 0;
-
-  late final SoundService sound = SoundService(
-    isEnabled: () => soundEnabled.value,
-  );
-
   GameStatus status = GameStatus.menu;
-
   late final OrbComponent orb;
-  double _spawnTimer = 0;
-  double _flightSeconds = 0;
-
-  /// Discrete ramp step (0-5), derived from [_rampFactor]. HUD overlays
-  /// watch this to flash a subtle cue whenever difficulty ticks up.
-  final ValueNotifier<int> speedLevel = ValueNotifier<int>(0);
-  static const int _speedLevelSteps = 5;
-
-  /// Gentle logarithmic ramp over ~90s of flight. 0.0 at take-off,
-  /// 1.0 at 90s. Pauses automatically since [_flightSeconds] only
-  /// advances while playing.
-  static const double _rampTimeConstant = 18.0;
-
-  static double _rampFactor(double seconds) {
-    const divisor =
-        1.791759; // ln(1 + 90/18) = ln(6), i.e. factor hits 1.0 at ~90s
-    final factor = log(1 + seconds / _rampTimeConstant) / divisor;
-    return factor.clamp(0.0, 1.0);
-  }
-
-  /// Scroll speed: difficulty base + difficulty-specific ramp delta.
-  double get currentObstacleSpeed =>
-      difficulty.value.obstacleSpeed +
-      difficulty.value.rampSpeedDelta * _rampFactor(_flightSeconds);
-
-  /// Spawn gap: difficulty base − difficulty-specific ramp delta.
-  double get currentSpawnInterval =>
-      (difficulty.value.spawnInterval -
-              difficulty.value.rampSpawnDelta * _rampFactor(_flightSeconds))
-          .clamp(difficulty.value.minSpawnInterval, 4.0);
+  double _spawnTimer = 0, _flightSeconds = 0, _protection = 0, _cueTime = 0;
+  double _lastCenter = 360;
+  int _spawned = 0, _taps = 0;
+  bool _tutorialReady = false,
+      _disposed = false,
+      _saving = false,
+      _background = false;
+  GameStatus _beforePause = GameStatus.playing;
+  String _runId = '';
+  String lossCause = '';
+  int countdownStep = 0;
+  final Set<Component> _runComponents = {};
+  String? persistenceError;
+  MissionsSnapshot? resultMissions;
+  List<NeonPalette> affordableThemes = [];
+  bool get isBackground => _background;
+  bool get waitingForTutorialTap => tutorial.value && _taps == 0;
+  bool get tutorialCompleted => tutorial.value && _tutorialReady;
+  bool get saving => _saving;
+  static double _rampFactor(double seconds) =>
+      (log(1 + seconds / 18) / log(6)).clamp(0.0, 1.0);
+  double get currentObstacleSpeed => tutorial.value
+      ? 110
+      : difficulty.value.obstacleSpeed +
+            difficulty.value.rampSpeedDelta * _rampFactor(_flightSeconds);
+  double get currentSpawnInterval => tutorial.value
+      ? 2.8
+      : difficulty.value.spawnInterval -
+            difficulty.value.rampSpawnDelta * _rampFactor(_flightSeconds);
 
   @override
   Future<void> onLoad() async {
@@ -129,18 +108,37 @@ class NightJumpGame extends FlameGame with HasCollisionDetection, TapCallbacks {
     highScore.value = await scoreRepository.getHighScore(difficulty.value);
     await refreshTheme();
     await sound.preload();
-
-    add(StarfieldComponent());
+    await add(StarfieldComponent());
     orb = OrbComponent();
-    add(orb);
+    await add(orb);
     orb.reset();
-
     overlays.add(menuOverlay);
     pauseEngine();
   }
 
-  void startGame() {
-    status = GameStatus.countdown;
+  void _addRunComponent(Component component) {
+    _runComponents.add(component);
+    add(component);
+  }
+
+  void _clearHazards() {
+    for (final child in _runComponents.toList()) {
+      child.removeFromParent();
+    }
+    _runComponents.clear();
+  }
+
+  void startGame({bool practice = false, bool quick = false}) {
+    if (_saving ||
+        _disposed ||
+        (status != GameStatus.menu && status != GameStatus.gameOver)) {
+      return;
+    }
+    tutorial.value = practice;
+    _tutorialReady = false;
+    _taps = 0;
+    countdownStep = 0;
+    status = quick || practice ? GameStatus.playing : GameStatus.countdown;
     score.value = 0;
     isNewHighScore.value = false;
     isPaused.value = false;
@@ -148,131 +146,106 @@ class NightJumpGame extends FlameGame with HasCollisionDetection, TapCallbacks {
     dustEarnedThisRun.value = 0;
     _spawnTimer = 0;
     _flightSeconds = 0;
+    _protection = 0;
+    _spawned = 0;
+    _lastCenter = size.y / 2;
+    _runId = DateTime.now().microsecondsSinceEpoch.toString();
+    resultMissions = null;
+    affordableThemes = [];
+    persistenceError = null;
+    lossCause = '';
     speedLevel.value = 0;
-    _obstaclesSinceLastGem = 0;
-    _mineSpawnTimer = 0;
-    _rocketSpawnTimer = 0;
-    _floatingMineSpawnTimer = 0;
-    _chillShieldGranted = false;
     shieldCount.value = difficulty.value.startingShields;
     shieldActive.value = false;
-    showShieldDialogue.value = false;
-
-    children.whereType<ObstacleComponent>().toList().forEach(
-      (obstacle) => obstacle.removeFromParent(),
-    );
-    children.whereType<ShieldGemComponent>().toList().forEach(
-      (gem) => gem.removeFromParent(),
-    );
-    children.whereType<MineComponent>().toList().forEach(
-      (mine) => mine.removeFromParent(),
-    );
-    children.whereType<RocketComponent>().toList().forEach(
-      (rocket) => rocket.removeFromParent(),
-    );
-    children.whereType<FloatingMineComponent>().toList().forEach(
-      (fm) => fm.removeFromParent(),
-    );
+    _clearHazards();
     orb.reset();
-
-    overlays.remove(menuOverlay);
-    overlays.remove(gameOverOverlay);
-    overlays.remove(shieldDialogueOverlay);
+    for (final id in [
+      menuOverlay,
+      gameOverOverlay,
+      pauseOverlay,
+      countdownOverlay,
+    ]) {
+      overlays.remove(id);
+    }
     overlays.add(hudOverlay);
-    overlays.add(countdownOverlay);
+    if (status == GameStatus.countdown) overlays.add(countdownOverlay);
+    showCue(
+      practice ? 'Toca para saltar • práctica sin perder' : '',
+      seconds: 5,
+    );
     resumeEngine();
+    if (_background) pauseGame();
   }
 
-  /// Called by [CountdownOverlay] when the 3-2-1 animation finishes.
+  void playAgain() => startGame(quick: true);
   void beginPlaying() {
+    if (status != GameStatus.countdown || _background) return;
     status = GameStatus.playing;
     overlays.remove(countdownOverlay);
+    orb.jump();
     sound.go();
   }
 
+  void showCue(String text, {double seconds = 2}) {
+    cue.value = text;
+    _cueTime = seconds;
+  }
+
   void addScore() {
+    if (status != GameStatus.playing) return;
     score.value++;
-    dustEarnedThisRun.value++;
     sound.score();
-    // Award 1 dust per obstacle cleared
-    missionsRepository.addDust(1);
-
-    // Chill mode: auto-grant shield at score threshold
-    final threshold = difficulty.value.shieldScoreThreshold;
-    if (threshold > 0 &&
-        !_chillShieldGranted &&
-        score.value >= threshold &&
-        shieldCount.value < difficulty.value.maxShields) {
-      _chillShieldGranted = true;
-      shieldCount.value = 1;
-      sound.score();
+    if (tutorial.value) {
+      if (score.value == 1) {
+        showCue(
+          'Escudo: se usa solo al chocar • protección de 1,5 s',
+          seconds: 5,
+        );
+      }
+      if (score.value >= 3 && _taps >= 3 && !_tutorialReady) {
+        _tutorialReady = true;
+        settingsRepository.setHowToPlaySeen();
+        pauseGame();
+      }
+      return;
+    }
+    // Persist each cleared gate in order; interruption does not lose earned dust.
+    missionsRepository.addDust(1).catchError((Object _) {
+      persistenceError = 'No se pudo guardar Stardust.';
+    });
+    dustEarnedThisRun.value++;
+    if (score.value > highScore.value && !isNewHighScore.value) {
+      isNewHighScore.value = true;
+      showCue('¡Nuevo récord!');
+    } else if (score.value % 10 == 0) {
+      showCue('${score.value} obstáculos ✦');
     }
   }
 
-  // ── Shield Methods ──
-
-  void useShield() {
-    if (shieldCount.value > 0 && !shieldActive.value) {
-      shieldCount.value--;
+  /// All collision sources share one atomic guard and recovery rule.
+  void hit(String cause) {
+    if (status != GameStatus.playing || _protection > 0) return;
+    if (tutorial.value || shieldCount.value > 0) {
+      if (shieldCount.value > 0) shieldCount.value--;
+      _protection = GatePlanner.recoverySeconds;
       shieldActive.value = true;
-      showShieldDialogue.value = false;
-      overlays.remove(shieldDialogueOverlay);
-      isPaused.value = false;
-      // Offset the orb forward to clear the obstacle it just hit
-      orb.position.x += ObstacleComponent.barWidth + 10;
-      status = GameStatus.playing;
-      resumeEngine();
+      // Remove the entire nearby field instead of teleporting into another bar.
+      _clearHazards();
+      orb.reset();
+      _spawnTimer = -0.8;
+      _lastCenter = size.y / 2;
+      showCue('Escudo usado • sigue tocando', seconds: 1.5);
       sound.ui();
-    }
-  }
-
-  void activateShieldFromGem() {
-    if (!shieldActive.value) {
-      shieldActive.value = true;
-      sound.score();
-    }
-  }
-
-  void deactivateShield() {
-    shieldActive.value = false;
-  }
-
-  void collectGem() {
-    if (shieldCount.value < difficulty.value.maxShields) {
-      shieldCount.value++;
-    }
-    activateShieldFromGem();
-  }
-
-  void onObstacleCleared() {
-    // Reserved for future use
-  }
-
-  void showShieldOffer() {
-    if (showShieldDialogue.value) return;
-    if (shieldCount.value > 0) {
-      showShieldDialogue.value = true;
-      isPaused.value = true;
-      status = GameStatus.paused;
-      pauseEngine();
-      overlays.add(shieldDialogueOverlay);
     } else {
+      lossCause = cause;
       endGame();
     }
   }
 
-  void dismissShieldDialogue() {
-    showShieldDialogue.value = false;
-    overlays.remove(shieldDialogueOverlay);
-    isPaused.value = false;
-    status = GameStatus.playing;
-    resumeEngine();
-  }
-
-  void rejectShield() {
-    showShieldDialogue.value = false;
-    overlays.remove(shieldDialogueOverlay);
-    endGame();
+  void collectGem() {
+    if (status != GameStatus.playing) return;
+    if (shieldCount.value < difficulty.value.maxShields) shieldCount.value++;
+    sound.score();
   }
 
   Future<void> toggleSound() async {
@@ -291,8 +264,6 @@ class NightJumpGame extends FlameGame with HasCollisionDetection, TapCallbacks {
     highScore.value = await scoreRepository.getHighScore(value);
   }
 
-  /// Re-reads the gallery choices (palette + comfort) after the player
-  /// returns from the theme gallery.
   Future<void> refreshTheme() async {
     palette.value = NeonPalette.byId(
       await themeRepository.getSelectedPaletteId(),
@@ -305,226 +276,234 @@ class NightJumpGame extends FlameGame with HasCollisionDetection, TapCallbacks {
     await settingsRepository.setComfortDim(value);
   }
 
-  void togglePause() {
-    if (status == GameStatus.playing) {
-      pauseGame();
-    } else if (status == GameStatus.paused) {
-      sound.ui();
-      resumeGame();
-    }
-  }
-
-  /// Clears all local progress (high score, missions/stardust, themes)
-  /// and refreshes in-memory state to match.
   Future<void> resetProgress() async {
     await settingsRepository.resetProgress();
     highScore.value = 0;
     isNewHighScore.value = false;
+    await refreshTheme();
   }
 
   Future<void> endGame() async {
-    if (status != GameStatus.playing) return;
+    if (status != GameStatus.playing || _saving) return;
     status = GameStatus.gameOver;
+    _saving = true;
     isPaused.value = false;
     pauseEngine();
     overlays.remove(hudOverlay);
-    overlays.remove(shieldDialogueOverlay);
     sound.gameOver();
-
-    final beatHighScore = await scoreRepository.saveScoreIfHigh(
-      difficulty.value,
-      score.value,
-    );
-    isNewHighScore.value = beatHighScore;
-    if (beatHighScore) highScore.value = score.value;
-    await missionsRepository.recordRunFinished(obstaclesCleared: score.value);
-
-    overlays.add(gameOverOverlay);
+    final finalScore = score.value;
+    final finalDifficulty = difficulty.value;
+    final finalRunId = _runId;
+    try {
+      final beat = await scoreRepository.saveScoreIfHigh(
+        finalDifficulty,
+        finalScore,
+      );
+      final best = await scoreRepository.getHighScore(finalDifficulty);
+      final rewards = await missionsRepository.recordRunFinished(
+        obstaclesCleared: finalScore,
+        runId: finalRunId,
+        includeGateDust: false,
+      );
+      resultMissions = await missionsRepository.loadSnapshot();
+      final unlocked = await themeRepository.getUnlockedPaletteIds();
+      affordableThemes = NeonPalette.catalog
+          .where(
+            (p) =>
+                !unlocked.contains(p.id) && p.cost <= resultMissions!.stardust,
+          )
+          .toList();
+      if (!_disposed) {
+        isNewHighScore.value = beat;
+        highScore.value = best;
+        dustEarnedThisRun.value += rewards;
+      }
+    } catch (_) {
+      persistenceError =
+          'No se pudo guardar el resultado. Revisa el espacio del dispositivo.';
+    } finally {
+      _saving = false;
+      if (!_disposed) overlays.add(gameOverOverlay);
+    }
   }
 
   void returnToMenu() {
+    if (_saving) return;
     status = GameStatus.menu;
+    tutorial.value = false;
     isPaused.value = false;
-    children.whereType<ObstacleComponent>().toList().forEach(
-      (obstacle) => obstacle.removeFromParent(),
-    );
-    children.whereType<ShieldGemComponent>().toList().forEach(
-      (gem) => gem.removeFromParent(),
-    );
-    children.whereType<MineComponent>().toList().forEach(
-      (mine) => mine.removeFromParent(),
-    );
-    children.whereType<RocketComponent>().toList().forEach(
-      (rocket) => rocket.removeFromParent(),
-    );
-    children.whereType<FloatingMineComponent>().toList().forEach(
-      (fm) => fm.removeFromParent(),
-    );
+    _clearHazards();
     shieldActive.value = false;
-    showShieldDialogue.value = false;
     orb.reset();
-    overlays.remove(gameOverOverlay);
-    overlays.remove(hudOverlay);
-    overlays.remove(pauseOverlay);
-    overlays.remove(shieldDialogueOverlay);
+    for (final id in [
+      gameOverOverlay,
+      hudOverlay,
+      pauseOverlay,
+      countdownOverlay,
+    ]) {
+      overlays.remove(id);
+    }
     overlays.add(menuOverlay);
     pauseEngine();
   }
 
+  void togglePause() {
+    if (status == GameStatus.paused) {
+      resumeGame();
+    } else {
+      pauseGame();
+    }
+  }
+
   void pauseGame() {
-    if (status != GameStatus.playing) return;
+    if (status != GameStatus.playing && status != GameStatus.countdown) return;
+    _beforePause = status;
     status = GameStatus.paused;
     isPaused.value = true;
     pauseEngine();
+    overlays.remove(countdownOverlay);
     overlays.add(pauseOverlay);
   }
 
-  /// Resumes in place: no countdown, the frozen frame simply continues.
   void resumeGame() {
-    if (status != GameStatus.paused) return;
-    status = GameStatus.playing;
+    if (status != GameStatus.paused || _background) return;
+    status = _beforePause;
     isPaused.value = false;
     overlays.remove(pauseOverlay);
+    if (status == GameStatus.countdown) overlays.add(countdownOverlay);
     resumeEngine();
+  }
+
+  void setBackground(bool background) {
+    _background = background;
+    if (background) {
+      pauseGame();
+      sound.stop();
+    }
+  }
+
+  @override
+  void lifecycleStateChange(AppLifecycleState state) {
+    super.lifecycleStateChange(state);
+    setBackground(state != AppLifecycleState.resumed);
   }
 
   @override
   void update(double dt) {
+    // Large foreground deltas must not tunnel through bars or expire protection.
+    if (dt > 0.1 && status == GameStatus.playing) {
+      pauseGame();
+      return;
+    }
     super.update(dt);
     if (status != GameStatus.playing) return;
-
+    _runComponents.removeWhere((component) => component.isRemoved);
+    if (tutorial.value && _taps == 0) return;
     _flightSeconds += dt;
     flightTime.value = Duration(milliseconds: (_flightSeconds * 1000).round());
-
-    final newSpeedLevel = (_rampFactor(_flightSeconds) * _speedLevelSteps)
-        .floor()
-        .clamp(0, _speedLevelSteps);
-    if (newSpeedLevel > speedLevel.value) {
-      speedLevel.value = newSpeedLevel;
+    if (_protection > 0) {
+      _protection = max(0, _protection - dt);
+      if (_protection == 0) shieldActive.value = false;
     }
-
+    if (_cueTime > 0) {
+      _cueTime -= dt;
+      if (_cueTime <= 0) cue.value = '';
+    }
+    speedLevel.value = (_rampFactor(_flightSeconds) * 5).floor();
     _spawnTimer += dt;
-    if (_spawnTimer >= currentSpawnInterval) {
-      _spawnTimer = 0;
-      final obstacle = ObstacleComponent(
-        startX: size.x + ObstacleComponent.barWidth,
-        screenHeight: size.y,
-        random: random,
-        gapHeight: difficulty.value.gapHeight,
-        lowerOnly: difficulty.value == GameDifficulty.chill,
-      );
-      add(obstacle);
-
-      // Gem spawning (classic/intense only)
-      final diff = difficulty.value;
-      if (diff.gemSpawnInterval > 0) {
-        _obstaclesSinceLastGem++;
-        final firstThreshold = diff.gemSpawnAfterFirst;
-        final interval = diff.gemSpawnInterval;
-
-        bool shouldSpawn = false;
-        if (_obstaclesSinceLastGem == firstThreshold) {
-          shouldSpawn = true;
-        } else if (_obstaclesSinceLastGem > firstThreshold &&
-            (_obstaclesSinceLastGem - firstThreshold) % interval == 0) {
-          shouldSpawn = true;
-        }
-
-        if (shouldSpawn &&
-            shieldCount.value < diff.maxShields &&
-            children.whereType<ShieldGemComponent>().length < 2) {
-          _spawnGemInGap(obstacle);
-        }
+    if (_spawnTimer < currentSpawnInterval) return;
+    _spawnTimer -= currentSpawnInterval;
+    _spawned++;
+    final diff = difficulty.value;
+    final extra =
+        !tutorial.value &&
+        diff.hazardEvery > 0 &&
+        _spawned % diff.hazardEvery == 0;
+    if (extra) {
+      // Outer lanes leave the central certified flight corridor unobstructed.
+      final y = (_spawned ~/ diff.hazardEvery).isEven ? 90.0 : size.y - 90;
+      final pos = Vector2(size.x + 70, y);
+      switch ((_spawned ~/ diff.hazardEvery) % 3) {
+        case 0:
+          _addRunComponent(MineComponent(position: pos));
+        case 1:
+          _addRunComponent(RocketComponent(position: pos, targetY: y));
+        case 2:
+          _addRunComponent(
+            FloatingMineComponent(
+              position: pos,
+              bounceSpeed: 35,
+              laneCenter: y,
+            ),
+          );
       }
+      showCue('Peligro en el borde • mantén el centro', seconds: 2);
+      return;
     }
-
-    // Hazard spawning (Tranquilo only)
-    if (difficulty.value == GameDifficulty.chill) {
-      final diff = difficulty.value;
-
-      // Static mines — full screen, avoiding obstacle areas
-      _mineSpawnTimer += dt;
-      if (_mineSpawnTimer >= diff.mineSpawnInterval &&
-          children.whereType<MineComponent>().length < diff.maxMines) {
-        _mineSpawnTimer = 0;
-        _spawnMine();
-      }
-
-      // Rockets — target player Y position
-      _rocketSpawnTimer += dt;
-      if (_rocketSpawnTimer >= diff.rocketSpawnInterval &&
-          children.whereType<RocketComponent>().length < diff.maxRockets) {
-        _rocketSpawnTimer = 0;
-        _spawnRocket();
-      }
-
-      // Floating mines — vertically bouncing hazards
-      _floatingMineSpawnTimer += dt;
-      if (_floatingMineSpawnTimer >= diff.floatingMineSpawnInterval &&
-          children.whereType<FloatingMineComponent>().length <
-              diff.maxFloatingMines) {
-        _floatingMineSpawnTimer = 0;
-        _spawnFloatingMine();
-      }
-    }
-  }
-
-  void _spawnMine() {
-    // Spawn in the upper 60% of the screen — avoids the lower-only
-    // obstacle bars that occupy roughly the bottom 40-50% in Chill mode.
-    final minY = 40.0;
-    final maxY = size.y * 0.6;
-    final mineY = minY + random.nextDouble() * (maxY - minY);
-    final mineX = size.x + 40 + random.nextDouble() * 80;
-
-    add(MineComponent(position: Vector2(mineX, mineY)));
-  }
-
-  void _spawnRocket() {
-    // Rockets spawn at the right edge at the player's current Y position
-    final rocketX = size.x + 40 + random.nextDouble() * 60;
-    final rocketY = orb.position.y;
-
-    add(RocketComponent(position: Vector2(rocketX, rocketY), targetY: rocketY));
-  }
-
-  void _spawnFloatingMine() {
-    // Spawn in the upper 70% of the screen — avoids the lower-only
-    // obstacle bars. Vertically bouncing mines add dynamic difficulty.
-    final minY = 50.0;
-    final maxY = size.y * 0.7;
-    final mineY = minY + random.nextDouble() * (maxY - minY);
-    final mineX = size.x + 40 + random.nextDouble() * 80;
-
-    add(
-      FloatingMineComponent(
-        position: Vector2(mineX, mineY),
-        bounceSpeed: 60 + random.nextDouble() * 60,
-      ),
+    final gap = GatePlanner.effectiveGap(
+      tutorial.value ? 300 : diff.gapHeight,
+      size.y,
     );
-  }
-
-  void _spawnGemInGap(ObstacleComponent obstacle) {
-    final minX = obstacle.position.x + ObstacleComponent.barWidth + 40;
-    final maxX = obstacle.position.x + ObstacleComponent.barWidth + 120;
-    final gemX = minX + random.nextDouble() * (maxX - minX);
-
-    final gapTop = obstacle.gapCenterY - obstacle.gapHeight / 2;
-    final gapBottom = obstacle.gapCenterY + obstacle.gapHeight / 2;
-    final margin = 30.0;
-    final gemY =
-        gapTop +
-        margin +
-        random.nextDouble() * (gapBottom - gapTop - margin * 2);
-
-    add(ShieldGemComponent(position: Vector2(gemX, gemY)));
+    _lastCenter = GatePlanner.nextCenter(
+      previous: _lastCenter,
+      height: size.y,
+      gap: gap,
+      interval: diff.minSpawnInterval,
+      maxSpeed: diff.obstacleSpeed + diff.rampSpeedDelta,
+      random: random,
+    );
+    final obstacle = ObstacleComponent(
+      startX: size.x + ObstacleComponent.barWidth,
+      screenHeight: size.y,
+      random: random,
+      gapHeight: gap,
+      centerY: _lastCenter,
+    );
+    _addRunComponent(obstacle);
+    if (_spawned >= diff.gemSpawnAfterFirst &&
+        (_spawned - diff.gemSpawnAfterFirst) % diff.gemSpawnInterval == 0 &&
+        shieldCount.value < diff.maxShields) {
+      _addRunComponent(
+        ShieldGemComponent(
+          position: Vector2(obstacle.position.x + 32, _lastCenter),
+        ),
+      );
+    }
   }
 
   @override
   void onTapDown(TapDownEvent event) {
     super.onTapDown(event);
     if (status == GameStatus.playing) {
+      _taps++;
       orb.jump();
+    }
+  }
+
+  void disposeResources() {
+    if (_disposed) return;
+    _disposed = true;
+    pauseEngine();
+    sound.dispose();
+    for (final notifier in <ChangeNotifier>[
+      score,
+      highScore,
+      isNewHighScore,
+      difficulty,
+      isPaused,
+      flightTime,
+      soundEnabled,
+      hapticsEnabled,
+      palette,
+      comfortDim,
+      shieldCount,
+      shieldActive,
+      dustEarnedThisRun,
+      speedLevel,
+      cue,
+      tutorial,
+    ]) {
+      notifier.dispose();
     }
   }
 }

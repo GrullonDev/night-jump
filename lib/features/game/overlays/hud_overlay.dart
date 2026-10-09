@@ -21,6 +21,23 @@ class HudOverlay extends StatelessWidget {
         child: Stack(
           children: [
             Align(
+              alignment: Alignment.bottomCenter,
+              child: Padding(
+                padding: const EdgeInsets.only(bottom: 24, left: 16, right: 16),
+                child: ValueListenableBuilder<String>(
+                  valueListenable: game.cue,
+                  builder: (_, text, _) => Text(
+                    text,
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(
+                      color: AppColor.slateWhite,
+                      fontFamily: 'Space Grotesk',
+                    ),
+                  ),
+                ),
+              ),
+            ),
+            Align(
               alignment: Alignment.topCenter,
               child: _SpeedUpCue(game: game),
             ),
@@ -66,7 +83,9 @@ class HudOverlay extends StatelessWidget {
                       builder: (context, paused, _) {
                         return IconButton(
                           icon: Icon(
-                            paused ? Icons.play_arrow_rounded : Icons.pause_rounded,
+                            paused
+                                ? Icons.play_arrow_rounded
+                                : Icons.pause_rounded,
                             color: AppColor.electricCyan,
                             size: 32,
                           ),
@@ -91,8 +110,12 @@ class HudOverlay extends StatelessWidget {
                                 borderRadius: BorderRadius.circular(12),
                                 border: Border.all(
                                   color: shieldActive
-                                      ? AppColor.shieldCyan.withValues(alpha: 0.6)
-                                      : AppColor.electricCyan.withValues(alpha: 0.2),
+                                      ? AppColor.shieldCyan.withValues(
+                                          alpha: 0.6,
+                                        )
+                                      : AppColor.electricCyan.withValues(
+                                          alpha: 0.2,
+                                        ),
                                 ),
                               ),
                               child: Row(

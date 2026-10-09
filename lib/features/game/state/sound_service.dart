@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flame_audio/flame_audio.dart';
 
 /// Procedurally generated retro-neon SFX (see `assets/audio/`).
@@ -8,6 +10,9 @@ class SoundService {
 
   final bool Function() isEnabled;
   bool _loaded = false;
+  bool _disposed = false;
+  final Set<AudioPlayer> _players = {};
+  final Map<AudioPlayer, StreamSubscription<void>> _subscriptions = {};
 
   static const _files = [
     'jump.wav',
@@ -18,7 +23,7 @@ class SoundService {
   ];
 
   Future<void> preload() async {
-    if (_loaded) return;
+    if (_loaded || !isEnabled() || _disposed) return;
     try {
       // iOS defaults to the ambient session, which the mute switch silences.
       // Playback ignores the switch (proper game behavior on both stores);
@@ -41,9 +46,19 @@ class SoundService {
   }
 
   Future<void> _play(String file, {double volume = 0.5}) async {
-    if (!isEnabled()) return;
+    if (!isEnabled() || _disposed) return;
     try {
-      await FlameAudio.play(file, volume: volume);
+      final player = await FlameAudio.play(file, volume: volume);
+      if (_disposed || !isEnabled()) {
+        await player.dispose();
+        return;
+      }
+      _players.add(player);
+      _subscriptions[player] = player.onPlayerComplete.listen((_) async {
+        _players.remove(player);
+        await _subscriptions.remove(player)?.cancel();
+        await player.dispose();
+      }, onError: (Object _) {});
     } catch (_) {}
   }
 
@@ -61,4 +76,25 @@ class SoundService {
 
   /// Short click for menu / dialog picks.
   Future<void> ui() => _play('ui.wav', volume: 0.4);
+
+  Future<void> stop() async {
+    final players = _players.toList();
+    _players.clear();
+    final subscriptions = _subscriptions.values.toList();
+    _subscriptions.clear();
+    for (final subscription in subscriptions) {
+      await subscription.cancel();
+    }
+    for (final player in players) {
+      try {
+        await player.stop();
+        await player.dispose();
+      } catch (_) {}
+    }
+  }
+
+  Future<void> dispose() async {
+    _disposed = true;
+    await stop();
+  }
 }

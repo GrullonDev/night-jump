@@ -35,6 +35,7 @@ class _CountdownOverlayState extends State<CountdownOverlay>
     // initState; this runs after initState and before the first build.
     if (_ready) return;
     _ready = true;
+    _stepIndex = widget.game.countdownStep;
 
     // Calm entrance: small fade + settle, no overshoot. With reduced
     // motion the steps complete instantly so the wait disappears too.
@@ -82,6 +83,7 @@ class _CountdownOverlayState extends State<CountdownOverlay>
 
     if (_stepIndex < _steps.length - 1) {
       setState(() => _stepIndex++);
+      widget.game.countdownStep = _stepIndex;
       _controller.forward(from: 0);
     } else {
       // Last step (GO!) finished — start the real game.

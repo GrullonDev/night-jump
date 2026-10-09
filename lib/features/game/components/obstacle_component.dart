@@ -15,7 +15,6 @@ class ObstacleComponent extends PositionComponent
     with HasGameReference<NightJumpGame> {
   static const double barWidth = 64;
   static const double defaultGapHeight = 190;
-  static const double _edgeMargin = 90;
 
   final double screenHeight;
   final double gapCenterY;
@@ -28,12 +27,15 @@ class ObstacleComponent extends PositionComponent
     required this.screenHeight,
     required Random random,
     double? gapHeight,
+    double? centerY,
     this.lowerOnly = false,
   }) : gapHeight = gapHeight ?? defaultGapHeight,
-       gapCenterY = lowerOnly
-           ? screenHeight * 0.55 + random.nextDouble() * (screenHeight * 0.3)
-           : _edgeMargin +
-               random.nextDouble() * (screenHeight - 2 * _edgeMargin),
+       gapCenterY =
+           centerY ??
+           (lowerOnly
+               ? screenHeight * 0.55 +
+                     random.nextDouble() * (screenHeight * 0.3)
+               : screenHeight / 2),
        super(position: Vector2(startX, 0), size: Vector2(barWidth, 0));
 
   @override
@@ -42,10 +44,7 @@ class ObstacleComponent extends PositionComponent
       // Bottom bar only: from below the gap to the screen bottom.
       add(
         RectangleHitbox(
-          size: Vector2(
-            barWidth,
-            screenHeight - (gapCenterY + gapHeight / 2),
-          ),
+          size: Vector2(barWidth, screenHeight - (gapCenterY + gapHeight / 2)),
           position: Vector2(0, gapCenterY + gapHeight / 2),
         ),
       );
@@ -60,10 +59,7 @@ class ObstacleComponent extends PositionComponent
       // Bottom bar
       add(
         RectangleHitbox(
-          size: Vector2(
-            barWidth,
-            screenHeight - (gapCenterY + gapHeight / 2),
-          ),
+          size: Vector2(barWidth, screenHeight - (gapCenterY + gapHeight / 2)),
           position: Vector2(0, gapCenterY + gapHeight / 2),
         ),
       );
@@ -73,7 +69,7 @@ class ObstacleComponent extends PositionComponent
   @override
   void update(double dt) {
     super.update(dt);
-    if (game.status != GameStatus.playing) return;
+    if (game.status != GameStatus.playing || isRemoving) return;
 
     // Live speed: all on-screen bars accelerate together as the run ramps.
     position.x -= game.currentObstacleSpeed * dt;

@@ -157,7 +157,7 @@ class _HowToPlayDialog extends StatelessWidget {
                       SizedBox(height: tipSpacing),
                       _TipRow(
                         icon: Icons.health_and_safety_rounded,
-                        text: 'Al chocar, usa el escudo para seguir.',
+                        text: 'Al chocar se usa solo: protección de 1,5 s.',
                         small: isSmallScreen,
                       ),
                       SizedBox(height: tipSpacing),
@@ -169,17 +169,17 @@ class _HowToPlayDialog extends StatelessWidget {
                       SizedBox(height: sectionSpacing),
 
                       // ── Stardust Section ──
-                      _SectionDivider(label: 'POLVOS ESTELARES'),
+                      _SectionDivider(label: 'STARDUST'),
                       SizedBox(height: tipSpacing),
                       _TipRow(
                         icon: Icons.auto_awesome_rounded,
-                        text: '1 Polvo por obstáculo superado.',
+                        text: '1 Stardust por obstáculo superado.',
                         small: isSmallScreen,
                       ),
                       SizedBox(height: tipSpacing),
                       _TipRow(
                         icon: Icons.palette_rounded,
-                        text: 'Canjea Polvos por temas visuales.',
+                        text: 'Canjea Stardust por temas visuales.',
                         small: isSmallScreen,
                       ),
                     ],
@@ -203,7 +203,7 @@ class _HowToPlayDialog extends StatelessWidget {
                       vertical: isSmallScreen ? 11 : 13,
                     ),
                     child: const Text(
-                      'JUGAR',
+                      'PRACTICAR',
                       textAlign: TextAlign.center,
                       style: TextStyle(
                         color: AppColor.canvasBase,

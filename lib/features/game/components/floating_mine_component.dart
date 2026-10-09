@@ -20,24 +20,24 @@ class FloatingMineComponent extends PositionComponent
   double _verticalVelocity;
   final double _bounceSpeed;
   final double _minY;
-  double _maxY;
+  final double _maxY;
 
   FloatingMineComponent({
     required Vector2 position,
     double bounceSpeed = 80,
-  })  : _bounceSpeed = bounceSpeed,
-        _verticalVelocity = bounceSpeed * (Random().nextBool() ? 1 : -1),
-        _minY = mineRadius + 10,
-        _maxY = 0, // Will be set in onLoad
-        super(
-          position: position,
-          size: Vector2.all(mineRadius * 2),
-          anchor: Anchor.center,
-        );
+    double? laneCenter,
+  }) : _bounceSpeed = bounceSpeed,
+       _verticalVelocity = bounceSpeed * (Random().nextBool() ? 1 : -1),
+       _minY = (laneCenter ?? position.y) - 22,
+       _maxY = (laneCenter ?? position.y) + 22,
+       super(
+         position: position,
+         size: Vector2.all(mineRadius * 2),
+         anchor: Anchor.center,
+       );
 
   @override
   Future<void> onLoad() async {
-    _maxY = game.size.y - mineRadius - 10;
     add(CircleHitbox(radius: hitboxRadius, anchor: Anchor.center));
   }
 
@@ -75,13 +75,7 @@ class FloatingMineComponent extends PositionComponent
   ) {
     super.onCollisionStart(intersectionPoints, other);
     if (other == game.orb && game.status == GameStatus.playing) {
-      if (game.shieldActive.value) {
-        game.deactivateShield();
-        game.sound.score();
-        removeFromParent();
-      } else {
-        game.endGame();
-      }
+      game.hit('Mina flotante');
     }
   }
 
@@ -111,14 +105,9 @@ class FloatingMineComponent extends PositionComponent
     // Mine body (dark core with amber rim)
     final bodyPaint = Paint()
       ..shader = RadialGradient(
-        colors: [
-          AppColor.canvasBase,
-          const Color(0xFFCC6600),
-        ],
+        colors: [AppColor.canvasBase, const Color(0xFFCC6600)],
         stops: const [0.0, 1.0],
-      ).createShader(
-        Rect.fromCircle(center: center, radius: mineRadius),
-      );
+      ).createShader(Rect.fromCircle(center: center, radius: mineRadius));
     canvas.drawCircle(center, mineRadius, bodyPaint);
 
     // Amber ring

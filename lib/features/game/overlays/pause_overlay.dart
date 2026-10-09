@@ -31,7 +31,9 @@ class PauseOverlay extends StatelessWidget {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Text(
-                      'PAUSA',
+                      game.tutorialCompleted
+                          ? '¡PRÁCTICA COMPLETADA!'
+                          : 'PAUSA',
                       textAlign: TextAlign.center,
                       style: TextStyle(
                         color: AppColor.electricCyan,
@@ -48,10 +50,14 @@ class PauseOverlay extends StatelessWidget {
                     ),
                     const SizedBox(height: 40),
                     _PrimaryButton(
-                      label: 'CONTINUAR',
+                      label: game.tutorialCompleted
+                          ? 'IR AL INICIO'
+                          : 'CONTINUAR',
                       icon: Icons.play_arrow_rounded,
                       color: AppColor.electricCyan,
-                      onTap: game.resumeGame,
+                      onTap: game.tutorialCompleted
+                          ? game.returnToMenu
+                          : game.resumeGame,
                     ),
                     const SizedBox(height: 12),
                     _PrimaryButton(

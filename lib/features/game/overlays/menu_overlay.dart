@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'package:night_jump/features/game/night_jump_game.dart';
+import 'package:night_jump/features/game/state/game_difficulty.dart';
 import 'package:night_jump/features/game/overlays/difficulty_dialog.dart';
 import 'package:night_jump/features/game/overlays/how_to_play_dialog.dart';
 import 'package:night_jump/features/game/overlays/soft_entrance.dart';
@@ -28,18 +29,28 @@ class _MenuOverlayState extends State<MenuOverlay> {
     if (!mounted) return;
     final seen = await widget.game.settingsRepository.getHowToPlaySeen();
     if (seen || !mounted) return;
-    await widget.game.settingsRepository.setHowToPlaySeen();
-    if (!mounted) return;
-    showHowToPlayDialog(context, onPlay: _askDifficultyThenPlay);
+    showHowToPlayDialog(
+      context,
+      onPlay: () => widget.game.startGame(practice: true),
+    );
   }
 
   void _showHowToPlayNow() {
-    showHowToPlayDialog(context, onPlay: _askDifficultyThenPlay);
+    showHowToPlayDialog(
+      context,
+      onPlay: () => widget.game.startGame(practice: true),
+    );
   }
 
   /// "Tap to jump" opens the difficulty picker; picking one persists
   /// the choice and starts the run immediately.
-  void _askDifficultyThenPlay() {
+  Future<void> _askDifficultyThenPlay() async {
+    final seen = await widget.game.settingsRepository.getHowToPlaySeen();
+    if (!mounted) return;
+    if (!seen) {
+      widget.game.startGame(practice: true);
+      return;
+    }
     showDifficultyDialog(
       context,
       current: widget.game.difficulty.value,
@@ -64,6 +75,7 @@ class _MenuOverlayState extends State<MenuOverlay> {
               child: HomePage(
                 onTapToPlay: _askDifficultyThenPlay,
                 highScore: highScore,
+                difficultyLabel: game.difficulty.value.label,
                 onTapPalette: () async {
                   await Navigator.of(context).push(
                     MaterialPageRoute(

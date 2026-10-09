@@ -14,14 +14,15 @@ class ShieldGemComponent extends PositionComponent
   static const double hitboxRadius = 18;
 
   double _pulseTime = 0;
+  bool _collected = false;
   double _rotationAngle = 0;
 
   ShieldGemComponent({required Vector2 position})
-      : super(
-          position: position,
-          size: Vector2.all(gemSize),
-          anchor: Anchor.center,
-        );
+    : super(
+        position: position,
+        size: Vector2.all(gemSize),
+        anchor: Anchor.center,
+      );
 
   @override
   Future<void> onLoad() async {
@@ -51,7 +52,8 @@ class ShieldGemComponent extends PositionComponent
     PositionComponent other,
   ) {
     super.onCollisionStart(intersectionPoints, other);
-    if (other == game.orb && game.status == GameStatus.playing) {
+    if (!_collected && other == game.orb && game.status == GameStatus.playing) {
+      _collected = true;
       game.collectGem();
       removeFromParent();
     }
@@ -99,14 +101,9 @@ class ShieldGemComponent extends PositionComponent
     // Gem gradient
     final gemPaint = Paint()
       ..shader = RadialGradient(
-        colors: [
-          AppColor.gemGreen,
-          AppColor.gemGreenDark,
-        ],
+        colors: [AppColor.gemGreen, AppColor.gemGreenDark],
         stops: const [0.0, 1.0],
-      ).createShader(
-        Rect.fromCircle(center: center, radius: radius),
-      );
+      ).createShader(Rect.fromCircle(center: center, radius: radius));
 
     canvas.drawPath(path, gemPaint);
 
