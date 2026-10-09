@@ -12,6 +12,7 @@ class HomeLayout extends StatelessWidget {
     super.key,
     this.onTapToPlay,
     this.highScore = 0,
+    this.difficultyLabel = 'Clásico',
     this.onTapPalette,
     this.onTapSound,
     this.soundEnabled = true,
@@ -22,6 +23,7 @@ class HomeLayout extends StatelessWidget {
   final VoidCallback? onTapToPlay;
 
   final int highScore;
+  final String difficultyLabel;
 
   final VoidCallback? onTapPalette;
 
@@ -49,6 +51,7 @@ class HomeLayout extends StatelessWidget {
               children: [
                 _buildHeader(
                   highScore,
+                  difficultyLabel,
                   soundEnabled,
                   onTapSound,
                   onTapSettings,
@@ -86,6 +89,7 @@ class HomeLayout extends StatelessWidget {
 
 Widget _buildHeader(
   int highScore,
+  String difficultyLabel,
   bool soundEnabled,
   VoidCallback? onTapSound,
   VoidCallback? onTapSettings,
@@ -110,7 +114,7 @@ Widget _buildHeader(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'BEST',
+                  'RÉCORD • $difficultyLabel',
                   style: TextStyle(
                     color: AppColor.slateGlow,
                     fontSize: 10,

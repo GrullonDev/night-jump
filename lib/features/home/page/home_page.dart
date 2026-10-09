@@ -8,6 +8,7 @@ class HomePage extends StatelessWidget {
     super.key,
     this.onTapToPlay,
     this.highScore = 0,
+    this.difficultyLabel = 'Clásico',
     this.onTapPalette,
     this.onTapSound,
     this.soundEnabled = true,
@@ -17,6 +18,7 @@ class HomePage extends StatelessWidget {
 
   final VoidCallback? onTapToPlay;
   final int highScore;
+  final String difficultyLabel;
 
   final VoidCallback? onTapPalette;
 
@@ -46,6 +48,7 @@ class HomePage extends StatelessWidget {
         child: HomeLayout(
           onTapToPlay: onTapToPlay,
           highScore: highScore,
+          difficultyLabel: difficultyLabel,
           onTapPalette: onTapPalette,
           onTapSound: onTapSound,
           soundEnabled: soundEnabled,

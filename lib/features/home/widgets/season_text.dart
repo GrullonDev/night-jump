@@ -8,7 +8,7 @@ class SeasonText extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Text(
-      'SERVIDOR ACTIVO • TEMPORADA 1',
+      'SIN CONEXIÓN • TU PROPIO RITMO',
       style: TextStyle(
         fontSize: 10,
         fontWeight: FontWeight.w600,
