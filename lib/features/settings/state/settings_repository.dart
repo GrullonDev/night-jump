@@ -1,11 +1,13 @@
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:night_jump/utils/progress_store.dart';
 
 /// Persists player preferences that apply across the whole app: whether
 /// sound/haptics are enabled, and clearing all saved progress.
 class SettingsRepository {
   static const _soundEnabledKey = 'settings.sound_enabled';
   static const _hapticsEnabledKey = 'settings.haptics_enabled';
-  static const _howToPlaySeenKey = 'settings.how_to_play_seen';
+  // The previous flag only meant that a text dialog had been opened.
+  static const _howToPlaySeenKey = 'settings.tutorial_completed.v1';
   static const _difficultyKey = 'settings.difficulty';
   static const _comfortDimKey = 'settings.comfort_dim';
 
@@ -63,6 +65,7 @@ class SettingsRepository {
   /// and unlocked/selected theme. Keeps the sound/haptics preferences
   /// and the tutorial-seen flag so a reset doesn't re-nag the player.
   Future<void> resetProgress() async {
+    await ProgressStore.reset();
     final prefs = await SharedPreferences.getInstance();
     final keysToKeep = {
       _soundEnabledKey,

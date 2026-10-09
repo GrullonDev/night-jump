@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
 
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:night_jump/utils/progress_store.dart';
+import 'package:night_jump/features/themes/state/neon_palette.dart';
 
 import 'package:night_jump/features/missions/state/mission.dart';
 import 'package:night_jump/features/missions/state/missions_snapshot.dart';
 
 class MissionsRepository {
+  MissionsRepository({DateTime Function()? now}) : _now = now ?? DateTime.now;
+  final DateTime Function() _now;
   static const _stardustKey = 'missions.stardust';
   static const _dailyDateKey = 'missions.daily.date';
   static const _dailyObstaclesKey = 'missions.daily.obstacles';
@@ -18,30 +21,59 @@ class MissionsRepository {
   static const _dailyObstaclesTarget = 30;
   static const _dailyGamesTarget = 3;
   static const _dailyBestRunTarget = 10;
-  static const _weeklyScoreTarget = 50000;
+  // Seven daily obstacle goals (30 × 7): about 4–5 short runs/day at 7–8
+  // gates/run. First paid theme costs less than a completed daily set.
+  static const weeklyObstaclesTarget = 210;
+  static const _weeklyScoreTarget = weeklyObstaclesTarget;
 
-  Future<int> getStardust() async {
-    final prefs = await SharedPreferences.getInstance();
+  Future<int> getStardust() => ProgressStore.transaction((prefs) async {
     return prefs.getInt(_stardustKey) ?? 0;
-  }
+  });
 
-  Future<void> addDust(int amount) async {
-    final prefs = await SharedPreferences.getInstance();
+  Future<void> addDust(int amount) => ProgressStore.transaction((prefs) async {
+    if (amount < 0) throw ArgumentError.value(amount);
     final current = prefs.getInt(_stardustKey) ?? 0;
     await prefs.setInt(_stardustKey, current + amount);
-  }
+  });
 
-  Future<bool> spendStardust(int amount) async {
-    final prefs = await SharedPreferences.getInstance();
-    final current = prefs.getInt(_stardustKey) ?? 0;
-    if (current < amount) return false;
-    await prefs.setInt(_stardustKey, current - amount);
-    return true;
-  }
+  Future<bool> spendStardust(int amount) =>
+      ProgressStore.transaction((prefs) async {
+        if (amount < 0) throw ArgumentError.value(amount);
+        final current = prefs.getInt(_stardustKey) ?? 0;
+        if (current < amount) return false;
+        await prefs.setInt(_stardustKey, current - amount);
+        return true;
+      });
 
-  Future<void> recordRunFinished({required int obstaclesCleared}) async {
-    final prefs = await SharedPreferences.getInstance();
+  /// Charge and unlock in the same durable write; repeated taps are idempotent.
+  Future<bool> purchasePalette(NeonPalette palette) =>
+      ProgressStore.transaction((prefs) async {
+        final unlocked = (prefs.getStringList('theme.unlocked_palettes') ?? [])
+            .toSet();
+        if (palette.isFree || unlocked.contains(palette.id)) return true;
+        final balance = prefs.getInt(_stardustKey) ?? 0;
+        if (balance < palette.cost) return false;
+        unlocked.add(palette.id);
+        await prefs.setInt(_stardustKey, balance - palette.cost);
+        await prefs.setStringList('theme.unlocked_palettes', unlocked.toList());
+        return true;
+      });
+
+  Future<int> recordRunFinished({
+    required int obstaclesCleared,
+    String? runId,
+    bool includeGateDust = true,
+  }) => ProgressStore.transaction((prefs) async {
+    if (obstaclesCleared < 0) throw ArgumentError.value(obstaclesCleared);
+    if (runId != null && prefs.getString('missions.last_run') == runId) {
+      return 0;
+    }
     await _rolloverIfNeeded(prefs);
+    final before = prefs.getInt(_stardustKey) ?? 0;
+    await prefs.setInt(
+      _stardustKey,
+      before + (includeGateDust ? obstaclesCleared : 0),
+    );
 
     await prefs.setInt(
       _dailyObstaclesKey,
@@ -58,29 +90,31 @@ class MissionsRepository {
     );
 
     await _grantCompletedRewards(prefs);
-  }
+    if (runId != null) await prefs.setString('missions.last_run', runId);
+    return (prefs.getInt(_stardustKey) ?? 0) - before;
+  });
 
-  Future<MissionsSnapshot> loadSnapshot() async {
-    final prefs = await SharedPreferences.getInstance();
-    await _rolloverIfNeeded(prefs);
-    await _grantCompletedRewards(prefs);
+  Future<MissionsSnapshot> loadSnapshot() =>
+      ProgressStore.transaction((prefs) async {
+        await _rolloverIfNeeded(prefs);
+        await _grantCompletedRewards(prefs);
 
-    final now = DateTime.now();
-    final nextReset = DateTime(
-      now.year,
-      now.month,
-      now.day,
-    ).add(const Duration(days: 1));
+        final now = _now();
+        final nextReset = DateTime(
+          now.year,
+          now.month,
+          now.day,
+        ).add(const Duration(days: 1));
 
-    return MissionsSnapshot(
-      stardust: prefs.getInt(_stardustKey) ?? 0,
-      timeUntilDailyReset: nextReset.difference(now),
-      dailyMissions: _buildDailyMissions(prefs),
-      weeklyMissions: _buildWeeklyMissions(prefs),
-    );
-  }
+        return MissionsSnapshot(
+          stardust: prefs.getInt(_stardustKey) ?? 0,
+          timeUntilDailyReset: nextReset.difference(now),
+          dailyMissions: _buildDailyMissions(prefs),
+          weeklyMissions: _buildWeeklyMissions(prefs),
+        );
+      });
 
-  List<Mission> _buildDailyMissions(SharedPreferences prefs) {
+  List<Mission> _buildDailyMissions(ProgressData prefs) {
     final obstacles = prefs.getInt(_dailyObstaclesKey) ?? 0;
     final games = prefs.getInt(_dailyGamesKey) ?? 0;
     final bestRun = prefs.getInt(_dailyBestRunKey) ?? 0;
@@ -125,7 +159,7 @@ class MissionsRepository {
     ];
   }
 
-  List<Mission> _buildWeeklyMissions(SharedPreferences prefs) {
+  List<Mission> _buildWeeklyMissions(ProgressData prefs) {
     final weeklyScore = prefs.getInt(_weeklyScoreKey) ?? 0;
 
     return [
@@ -135,21 +169,21 @@ class MissionsRepository {
         icon: Icons.diamond_rounded,
         title: 'Maestro de la Gravedad',
         subtitle:
-            'Alcanza un total acumulado de $_weeklyScoreTarget '
-            'puntos esta semana',
+            'Supera un total acumulado de $_weeklyScoreTarget '
+            'obstáculos esta semana',
         progress: weeklyScore,
         target: _weeklyScoreTarget,
         reward: 500,
-        rewardLabel: 'Cofre Épico',
+        rewardLabel: '+500 Stardust',
         claimed: _isClaimed(prefs, 'weekly_master'),
       ),
     ];
   }
 
-  bool _isClaimed(SharedPreferences prefs, String missionId) =>
+  bool _isClaimed(ProgressData prefs, String missionId) =>
       prefs.getBool('$_claimedPrefix$missionId') ?? false;
 
-  Future<void> _grantCompletedRewards(SharedPreferences prefs) async {
+  Future<void> _grantCompletedRewards(ProgressData prefs) async {
     var stardust = prefs.getInt(_stardustKey) ?? 0;
 
     for (final mission in [
@@ -165,8 +199,9 @@ class MissionsRepository {
     await prefs.setInt(_stardustKey, stardust);
   }
 
-  Future<void> _rolloverIfNeeded(SharedPreferences prefs) async {
-    final today = _dateKey(DateTime.now());
+  Future<void> _rolloverIfNeeded(ProgressData prefs) async {
+    final now = _now();
+    final today = _dateKey(now);
     if (prefs.getString(_dailyDateKey) != today) {
       await prefs.setString(_dailyDateKey, today);
       await prefs.setInt(_dailyObstaclesKey, 0);
@@ -186,7 +221,10 @@ class MissionsRepository {
       );
     }
 
-    final week = _weekKey(DateTime.now());
+    final week = _weekKey(now);
+    if (prefs.getString(_weeklyKeyKey) == _legacyWeekKey(now)) {
+      await prefs.setString(_weeklyKeyKey, week);
+    }
     if (prefs.getString(_weeklyKeyKey) != week) {
       await prefs.setString(_weeklyKeyKey, week);
       await prefs.setInt(_weeklyScoreKey, 0);
@@ -204,10 +242,15 @@ class MissionsRepository {
   }
 
   String _weekKey(DateTime date) {
-    final firstDayOfYear = DateTime(date.year, 1, 1);
-    final daysSinceStart = date.difference(firstDayOfYear).inDays;
-    final weekNumber = ((daysSinceStart + firstDayOfYear.weekday - 1) / 7)
+    return _dateKey(
+      DateTime(date.year, date.month, date.day - date.weekday + 1),
+    );
+  }
+
+  String _legacyWeekKey(DateTime date) {
+    final first = DateTime(date.year, 1, 1);
+    final week = ((date.difference(first).inDays + first.weekday - 1) / 7)
         .ceil();
-    return '${date.year}-W$weekNumber';
+    return '${date.year}-W$week';
   }
 }

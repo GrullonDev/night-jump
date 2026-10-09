@@ -44,7 +44,7 @@ class NeonPalette {
       description: 'Verde Esmeralda & Turquesa',
       primary: Color(0xFF2DE1A5),
       secondary: Color(0xFF00DBE9),
-      cost: 800,
+      cost: 200,
     ),
     NeonPalette(
       id: 'eclipse',
@@ -52,7 +52,7 @@ class NeonPalette {
       description: 'Rojo Carmesí & Naranja Ígneo',
       primary: Color(0xFFFF3B3B),
       secondary: Color(0xFFFF7A1A),
-      cost: 1200,
+      cost: 500,
     ),
   ];
 

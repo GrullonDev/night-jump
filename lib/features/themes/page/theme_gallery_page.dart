@@ -32,6 +32,7 @@ class _ThemeGalleryPageState extends State<ThemeGalleryPage> {
   int _stardust = 0;
   bool _comfortMode = false;
   bool _loading = true;
+  bool _purchasing = false;
   late final SettingsRepository _settings =
       widget.settingsRepository ?? SettingsRepository();
 
@@ -58,12 +59,29 @@ class _ThemeGalleryPageState extends State<ThemeGalleryPage> {
   }
 
   Future<void> _onPaletteTap(NeonPalette palette) async {
+    if (_purchasing) return;
     if (_unlockedIds.contains(palette.id)) {
       setState(() => _previewPaletteId = palette.id);
       return;
     }
 
-    final unlocked = await _tryUnlock(palette);
+    _purchasing = true;
+    bool unlocked;
+    try {
+      unlocked = await _tryUnlock(palette);
+    } catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('No se pudo guardar la compra. Inténtalo de nuevo.'),
+          ),
+        );
+      }
+      return;
+    } finally {
+      _purchasing = false;
+    }
+    if (!mounted) return;
     if (unlocked) {
       setState(() {
         _unlockedIds = {..._unlockedIds, palette.id};
@@ -75,8 +93,8 @@ class _ThemeGalleryPageState extends State<ThemeGalleryPage> {
         SnackBar(
           content: Text(
             deficit > 0
-                ? 'Te faltan $deficit polvos para desbloquear ${palette.name}'
-                : 'Necesitas ${palette.cost} polvos para ${palette.name}',
+                ? 'Te faltan $deficit Stardust para desbloquear ${palette.name}'
+                : 'Necesitas ${palette.cost} Stardust para ${palette.name}',
           ),
           action: SnackBarAction(
             label: 'JUGAR',
@@ -89,15 +107,16 @@ class _ThemeGalleryPageState extends State<ThemeGalleryPage> {
   }
 
   Future<bool> _tryUnlock(NeonPalette palette) async {
-    final success = await widget.missionsRepository.spendStardust(palette.cost);
+    final success = await widget.missionsRepository.purchasePalette(palette);
     if (!success) return false;
-    await widget.themeRepository.unlockPalette(palette.id);
-    setState(() => _stardust -= palette.cost);
+    final balance = await widget.missionsRepository.getStardust();
+    if (mounted) setState(() => _stardust = balance);
     return true;
   }
 
   Future<void> _confirm() async {
     await widget.themeRepository.selectPalette(_previewPaletteId);
+    if (!mounted) return;
     setState(() => _confirmedPaletteId = _previewPaletteId);
     if (mounted) Navigator.of(context).pop();
   }
@@ -315,7 +334,7 @@ class _Header extends StatelessWidget {
                 ),
                 const SizedBox(width: 6),
                 Text(
-                  '$stardust POLVO',
+                  '$stardust STARDUST',
                   style: TextStyle(
                     color: AppColor.onSurface,
                     fontSize: 12,
