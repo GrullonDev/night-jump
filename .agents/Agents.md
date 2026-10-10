@@ -4,7 +4,7 @@
 
 Night Jump es un arcade móvil sin conexión, con interfaz en español y control de un toque para saltar. Está dirigido a sesiones casuales: jugar, superar récords personales, completar misiones, ganar Stardust, desbloquear temas y compartir resultados.
 
-Están implementadas tres dificultades, tutorial jugable, escudos automáticos, tres misiones diarias y una semanal, cuatro temas, ajustes locales y tarjeta de resultados. Los récords son personales y separados por dificultad; no hay rankings globales, amigos, ligas, temporadas remotas, autenticación ni backend. La versión `1.0.1+2` es candidata a distribución, no prueba de publicación. Consulta [README.md](README.md), [docs/RELEASE_1_0.md](docs/RELEASE_1_0.md) y [docs/RELEASE_1_0_1.md](docs/RELEASE_1_0_1.md).
+Están implementadas tres dificultades, tutorial jugable, escudos automáticos, tres misiones diarias y una semanal, cuatro temas, ajustes locales y tarjeta de resultados. Los récords son personales y separados por dificultad; no hay rankings globales, amigos, ligas, temporadas remotas, autenticación ni backend. La versión `1.0.1+3` es candidata a distribución, no prueba de publicación. Consulta [README.md](README.md), [docs/RELEASE_1_0.md](docs/RELEASE_1_0.md) y [docs/RELEASE_1_0_1.md](docs/RELEASE_1_0_1.md).
 
 ## Stack y plataformas
 

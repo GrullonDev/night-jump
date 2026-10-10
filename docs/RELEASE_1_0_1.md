@@ -1,6 +1,6 @@
 # Night Jump 1.0.1 — candidato de mantenimiento
 
-Versión `1.0.1+2`. Mantiene el alcance offline de 1.0, los cuatro temas,
+Versión `1.0.1+3`. Mantiene el alcance offline de 1.0, los cuatro temas,
 las dificultades y el balance existente. No añade servicios ni dependencias de
 producción. Se declara la interfaz de SharedPreferences como dependencia de
 desarrollo (ya era transitiva) para simular fallos de escritura nativa.
