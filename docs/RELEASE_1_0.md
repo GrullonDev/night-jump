@@ -6,9 +6,9 @@ implementación: `feat/night-jump-1.0`. Sin backend ni publicación automática.
 
 ## Preparar distribución
 
-Android ya no usa la firma debug para release. Copia
-`android/key.properties.example` a `android/key.properties` y configura la
-clave privada de subida. El archivo y los keystores están ignorados por Git.
+Android ya no usa la firma debug para release. Copia `.env.example` a `.env`
+en la raíz del proyecto y configura la ruta del keystore de subida y sus
+contraseñas. `.env` y los keystores están ignorados por Git.
 Sin credenciales, el bundle de validación queda sin firma y no debe subirse.
 
 ```bash

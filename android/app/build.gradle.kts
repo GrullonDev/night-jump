@@ -6,10 +6,36 @@ plugins {
     id("dev.flutter.flutter-gradle-plugin")
 }
 
-val releaseKeys = Properties()
-val releaseKeysFile = rootProject.file("key.properties")
-if (releaseKeysFile.exists()) {
-    releaseKeysFile.inputStream().use { releaseKeys.load(it) }
+// Release signing is read from the project-root .env (git-ignored). When the
+// file is absent the release build stays unsigned for local validation.
+val releaseEnvFile = rootProject.file("../.env")
+val releaseEnv = Properties()
+if (releaseEnvFile.exists()) {
+    releaseEnvFile.readLines()
+        .map { it.trim() }
+        .filter { it.isNotEmpty() && !it.startsWith("#") && it.contains("=") }
+        .forEach { line ->
+            val key = line.substringBefore("=").trim().removePrefix("export ").trim()
+            val value = line.substringAfter("=").trim().removeSurrounding("\"").removeSurrounding("'")
+            releaseEnv.setProperty(key, value)
+        }
+}
+
+fun releaseEnvValue(key: String): String =
+    releaseEnv.getProperty(key)?.takeIf { it.isNotBlank() }
+        ?: throw GradleException("Missing $key in ${releaseEnvFile.path}")
+
+val releaseSigningEnabled = releaseEnvFile.exists()
+val releaseKeystoreFile: File? = if (releaseSigningEnabled) {
+    // Supports ~/ (macOS home), absolute paths, or paths relative to the project root.
+    val rawPath = releaseEnvValue("ANDROID_KEYSTORE_PATH")
+    val expanded = if (rawPath.startsWith("~/")) System.getProperty("user.home") + rawPath.substring(1) else rawPath
+    val candidate = File(expanded)
+    val resolved = if (candidate.isAbsolute) candidate else rootProject.file("../$expanded")
+    if (!resolved.exists()) throw GradleException("Keystore not found: ${resolved.path} (ANDROID_KEYSTORE_PATH in .env)")
+    resolved
+} else {
+    null
 }
 
 android {
@@ -44,12 +70,12 @@ android {
     }
 
     signingConfigs {
-        if (releaseKeysFile.exists()) {
+        if (releaseSigningEnabled) {
             create("release") {
-                keyAlias = releaseKeys.getProperty("keyAlias")
-                keyPassword = releaseKeys.getProperty("keyPassword")
-                storeFile = file(releaseKeys.getProperty("storeFile"))
-                storePassword = releaseKeys.getProperty("storePassword")
+                storeFile = releaseKeystoreFile
+                storePassword = releaseEnvValue("ANDROID_KEYSTORE_PASSWORD")
+                keyAlias = releaseEnvValue("ANDROID_KEY_ALIAS")
+                keyPassword = releaseEnvValue("ANDROID_KEY_PASSWORD")
             }
         }
     }
@@ -57,8 +83,8 @@ android {
     buildTypes {
         release {
 
-            // Without private credentials this is an unsigned validation build.
-            signingConfig = if (releaseKeysFile.exists()) signingConfigs.getByName("release") else null
+            // Without .env this is an unsigned validation build.
+            signingConfig = if (releaseSigningEnabled) signingConfigs.getByName("release") else null
         }
     }
 }

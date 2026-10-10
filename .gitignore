@@ -60,3 +60,8 @@ pubspec.lock
 android/key.properties
 *.jks
 *.keystore
+
+# Release signing secrets
+.env
+*.jks
+*.keystore

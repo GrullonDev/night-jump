@@ -12,6 +12,8 @@ done
 
 release_root="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd -P)"
 release_workdir="$(mktemp -d /private/tmp/night-jump-release.XXXXXX)"
+# The retained copy must not keep signing secrets, whether the run passes or fails.
+trap 'rm -f -- "$release_workdir/.env"' EXIT
 printf 'Validation source: %s\n' "$release_workdir"
 rsync -a --exclude='.git' --exclude='.agents' --exclude='build' \
   --exclude='.dart_tool' --exclude='Pods' --exclude='.symlinks' \
@@ -33,4 +35,9 @@ flutter analyze
 flutter test --coverage
 flutter build appbundle --release
 printf 'Android bundle: %s/build/app/outputs/bundle/release/app-release.aab\n' "$release_workdir"
-# The copy is deliberately retained for artifact review and reproducibility.
+if [[ -f .env ]]; then
+  printf 'Signing: .env found; bundle signed with the upload key.\n'
+else
+  printf 'Signing: no .env; bundle is UNSIGNED and cannot be uploaded to Play.\n'
+fi
+# The copy (minus .env) is deliberately retained for artifact review and reproducibility.

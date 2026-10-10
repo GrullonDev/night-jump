@@ -1,5 +1,0 @@
-# Copy to key.properties locally; never commit credentials or the keystore.
-storePassword=YOUR_STORE_PASSWORD
-keyPassword=YOUR_KEY_PASSWORD
-keyAlias=upload
-storeFile=/absolute/path/to/upload-keystore.jks
