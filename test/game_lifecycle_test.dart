@@ -9,14 +9,45 @@ import 'package:night_jump/features/game/state/game_status.dart';
 import 'package:night_jump/features/game/components/orb_component.dart';
 import 'package:night_jump/features/game/components/obstacle_component.dart';
 import 'package:night_jump/features/game/state/game_difficulty.dart';
+import 'package:night_jump/features/missions/state/missions_repository.dart';
+import 'package:night_jump/features/missions/state/missions_snapshot.dart';
 
-Future<NightJumpGame> mountGame(WidgetTester tester) async {
+class InterruptedMissionsRepository extends MissionsRepository {
+  bool failGates = true;
+  bool failSnapshot = true;
+
+  @override
+  Future<void> recordGateProgress({
+    required String runId,
+    required int obstaclesCleared,
+  }) async {
+    if (failGates) throw StateError('Simulated gate write failure');
+    await super.recordGateProgress(
+      runId: runId,
+      obstaclesCleared: obstaclesCleared,
+    );
+  }
+
+  @override
+  Future<MissionsSnapshot> loadSnapshot() async {
+    if (failSnapshot) {
+      failSnapshot = false;
+      throw StateError('Simulated read failure after awarding rewards');
+    }
+    return super.loadSnapshot();
+  }
+}
+
+Future<NightJumpGame> mountGame(
+  WidgetTester tester, {
+  MissionsRepository? missionsRepository,
+}) async {
   SharedPreferences.setMockInitialValues({
     'settings.tutorial_completed.v1': true,
     'settings.sound_enabled': false,
     'settings.haptics_enabled': false,
   });
-  final game = NightJumpGame();
+  final game = NightJumpGame(missionsRepository: missionsRepository);
   for (final id in [
     NightJumpGame.menuOverlay,
     NightJumpGame.hudOverlay,
@@ -41,6 +72,36 @@ Future<NightJumpGame> mountGame(WidgetTester tester) async {
 }
 
 void main() {
+  testWidgets(
+    'result retry recovers gate dust and keeps rewards exactly once',
+    (tester) async {
+      final missions = InterruptedMissionsRepository();
+      final game = await mountGame(tester, missionsRepository: missions);
+      game.startGame(quick: true);
+      for (var gate = 0; gate < 10; gate++) {
+        game.addScore();
+      }
+      await tester.pump();
+      missions.failGates = false;
+      await tester.runAsync(game.endGame);
+      await tester.pump();
+      expect(game.persistenceError, isNotNull);
+      expect(find.text('REINTENTAR GUARDADO'), findsOneWidget);
+      await tester.tap(find.text('REINTENTAR GUARDADO'));
+      await tester.pumpAndSettle();
+      await tester.runAsync(game.retrySaveResult);
+      await tester.pump();
+      expect(game.persistenceError, isNull);
+      expect(game.highScore.value, 10);
+      expect(game.isNewHighScore.value, isTrue);
+      expect(game.dustEarnedThisRun.value, 110);
+      expect(await tester.runAsync(missions.getStardust), 110);
+      final snapshot = await tester.runAsync(missions.loadSnapshot);
+      expect(snapshot!.dailyMissions[1].progress, 1);
+      expect(find.text('REINTENTAR GUARDADO'), findsNothing);
+      await tester.pumpWidget(const SizedBox.shrink());
+    },
+  );
   testWidgets(
     'leaving during result persistence does not cancel saved progress',
     (tester) async {

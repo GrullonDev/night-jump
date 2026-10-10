@@ -3,7 +3,7 @@ description: "Arcade nocturno sin conexión: salta, supera récords y desbloquea
 
 publish_to: 'none' 
 
-version: 1.0.0+1
+version: 1.0.1+2
 
 environment:
   sdk: ^3.13.1
@@ -21,8 +21,13 @@ dependencies:
 dev_dependencies:
   flutter_test:
     sdk: flutter
+  integration_test:
+    sdk: flutter
 
   flutter_lints: ^6.0.0
+  # Already used by shared_preferences; exposes the native storage boundary
+  # for deterministic rejected/throwing write tests, without runtime additions.
+  shared_preferences_platform_interface: ^2.4.2
   flutter_launcher_icons: ^0.14.3
 
 flutter:

@@ -14,6 +14,7 @@ class GameOverOverlay extends StatefulWidget {
 
 class _GameOverOverlayState extends State<GameOverOverlay> {
   bool _sharing = false;
+  bool _retryingSave = false;
   final _shareKey = GlobalKey();
   Future<void> _share() async {
     if (_sharing) return;
@@ -107,6 +108,21 @@ class _GameOverOverlayState extends State<GameOverOverlay> {
                       game.persistenceError!,
                       style: const TextStyle(color: AppColor.error),
                     ),
+                  if (game.persistenceError != null)
+                    TextButton(
+                      onPressed: _retryingSave || _sharing
+                          ? null
+                          : () async {
+                              setState(() => _retryingSave = true);
+                              await game.retrySaveResult();
+                              if (mounted) {
+                                setState(() => _retryingSave = false);
+                              }
+                            },
+                      child: Text(
+                        _retryingSave ? 'GUARDANDO…' : 'REINTENTAR GUARDADO',
+                      ),
+                    ),
                   if (missions != null) ...[
                     const SizedBox(height: 12),
                     for (final m in [
@@ -147,20 +163,24 @@ class _GameOverOverlayState extends State<GameOverOverlay> {
                     ),
                   const SizedBox(height: 20),
                   FilledButton(
-                    onPressed: _sharing ? null : game.playAgain,
+                    onPressed: _sharing || _retryingSave
+                        ? null
+                        : game.playAgain,
                     child: const Text('JUGAR OTRA VEZ'),
                   ),
                   const SizedBox(height: 8),
                   OutlinedButton(
                     key: _shareKey,
-                    onPressed: _sharing ? null : _share,
+                    onPressed: _sharing || _retryingSave ? null : _share,
                     child: Text(
                       _sharing ? 'PREPARANDO…' : 'COMPARTIR RESULTADO',
                     ),
                   ),
                   const SizedBox(height: 8),
                   TextButton(
-                    onPressed: _sharing ? null : game.returnToMenu,
+                    onPressed: _sharing || _retryingSave
+                        ? null
+                        : game.returnToMenu,
                     child: const Text('INICIO'),
                   ),
                 ],

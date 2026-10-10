@@ -7,10 +7,15 @@ import 'package:shared_preferences/shared_preferences.dart';
 class ProgressStore {
   static const key = 'night_jump.progress.v1';
   static Future<void> _tail = Future<void>.value();
+  static bool _mustReload = false;
 
   static Future<T> transaction<T>(Future<T> Function(ProgressData) action) {
     final result = _tail.then((_) async {
       final prefs = await SharedPreferences.getInstance();
+      if (_mustReload) {
+        await prefs.reload();
+        _mustReload = false;
+      }
       final saved = prefs.getString(key);
       final data = ProgressData(
         saved == null
@@ -18,8 +23,23 @@ class ProgressStore {
             : Map<String, dynamic>.from(jsonDecode(saved) as Map),
       );
       final value = await action(data);
-      if (!await prefs.setString(key, jsonEncode(data.values))) {
-        throw StateError('No se pudo guardar el progreso');
+      try {
+        if (!await prefs.setString(key, jsonEncode(data.values))) {
+          throw StateError('No se pudo guardar el progreso');
+        }
+      } catch (_) {
+        // Legacy SharedPreferences updates its cache before native storage
+        // confirms success. Never let a rejected purchase become persisted by
+        // the next read transaction. If reload also fails, block that next
+        // transaction until the durable state can be read again.
+        _mustReload = true;
+        try {
+          await prefs.reload();
+          _mustReload = false;
+        } catch (_) {
+          // Keep the original write error and require a reload next time.
+        }
+        rethrow;
       }
       return value;
     });
@@ -30,8 +50,20 @@ class ProgressStore {
     return result;
   }
 
-  static Future<void> reset() =>
-      transaction((data) async => data.values.clear());
+  static Future<void> reset({required Set<String> keysToKeep}) =>
+      transaction((data) async {
+        final prefs = await SharedPreferences.getInstance();
+        for (final oldKey in prefs.getKeys()) {
+          if (oldKey != key && !keysToKeep.contains(oldKey)) {
+            if (!await prefs.remove(oldKey)) {
+              throw StateError('No se pudo restablecer el progreso');
+            }
+          }
+        }
+        // Keep an empty document rather than deleting it and re-importing
+        // legacy keys. Subsequent rewards remain inside the same queue.
+        data.values.clear();
+      });
 }
 
 class ProgressData {

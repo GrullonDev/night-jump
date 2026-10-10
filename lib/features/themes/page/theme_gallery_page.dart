@@ -33,6 +33,8 @@ class _ThemeGalleryPageState extends State<ThemeGalleryPage> {
   bool _comfortMode = false;
   bool _loading = true;
   bool _purchasing = false;
+  bool _confirming = false;
+  bool _loadFailed = false;
   late final SettingsRepository _settings =
       widget.settingsRepository ?? SettingsRepository();
 
@@ -43,23 +45,36 @@ class _ThemeGalleryPageState extends State<ThemeGalleryPage> {
   }
 
   Future<void> _load() async {
-    final selected = await widget.themeRepository.getSelectedPaletteId();
-    final unlocked = await widget.themeRepository.getUnlockedPaletteIds();
-    final stardust = await widget.missionsRepository.getStardust();
-    final comfort = await _settings.getComfortDim();
-    if (!mounted) return;
     setState(() {
-      _confirmedPaletteId = selected;
-      _previewPaletteId = selected;
-      _unlockedIds = unlocked;
-      _stardust = stardust;
-      _comfortMode = comfort;
-      _loading = false;
+      _loading = true;
+      _loadFailed = false;
     });
+    try {
+      final selected = await widget.themeRepository.getSelectedPaletteId();
+      final unlocked = await widget.themeRepository.getUnlockedPaletteIds();
+      final stardust = await widget.missionsRepository.getStardust();
+      final comfort = await _settings.getComfortDim();
+      if (!mounted) return;
+      setState(() {
+        _confirmedPaletteId = selected;
+        _previewPaletteId = selected;
+        _unlockedIds = unlocked;
+        _stardust = stardust;
+        _comfortMode = comfort;
+        _loading = false;
+      });
+    } catch (_) {
+      if (mounted) {
+        setState(() {
+          _loading = false;
+          _loadFailed = true;
+        });
+      }
+    }
   }
 
   Future<void> _onPaletteTap(NeonPalette palette) async {
-    if (_purchasing) return;
+    if (_purchasing || _confirming) return;
     if (_unlockedIds.contains(palette.id)) {
       setState(() => _previewPaletteId = palette.id);
       return;
@@ -115,10 +130,24 @@ class _ThemeGalleryPageState extends State<ThemeGalleryPage> {
   }
 
   Future<void> _confirm() async {
-    await widget.themeRepository.selectPalette(_previewPaletteId);
-    if (!mounted) return;
-    setState(() => _confirmedPaletteId = _previewPaletteId);
-    if (mounted) Navigator.of(context).pop();
+    if (_confirming || _purchasing) return;
+    setState(() => _confirming = true);
+    try {
+      await widget.themeRepository.selectPalette(_previewPaletteId);
+      if (!mounted) return;
+      setState(() => _confirmedPaletteId = _previewPaletteId);
+      Navigator.of(context).pop();
+    } catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('No se pudo guardar el tema. Inténtalo de nuevo.'),
+          ),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _confirming = false);
+    }
   }
 
   @override
@@ -128,6 +157,34 @@ class _ThemeGalleryPageState extends State<ThemeGalleryPage> {
         backgroundColor: AppColor.canvasBase,
         body: Center(
           child: CircularProgressIndicator(color: AppColor.electricCyan),
+        ),
+      );
+    }
+    if (_loadFailed) {
+      return Scaffold(
+        backgroundColor: AppColor.canvasBase,
+        appBar: AppBar(title: const Text('Temas')),
+        body: SafeArea(
+          child: Center(
+            child: Padding(
+              padding: const EdgeInsets.all(24),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Text(
+                    'No se pudieron cargar tus temas. Tu progreso no se ha borrado.',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(color: AppColor.slateWhite),
+                  ),
+                  const SizedBox(height: 16),
+                  FilledButton(
+                    onPressed: _load,
+                    child: const Text('REINTENTAR'),
+                  ),
+                ],
+              ),
+            ),
+          ),
         ),
       );
     }
@@ -247,7 +304,10 @@ class _ThemeGalleryPageState extends State<ThemeGalleryPage> {
                       const SizedBox(height: 12),
                     ],
                     const SizedBox(height: 8),
-                    _ConfirmButton(enabled: hasChanges, onTap: _confirm),
+                    _ConfirmButton(
+                      enabled: hasChanges && !_confirming && !_purchasing,
+                      onTap: _confirm,
+                    ),
                     const SizedBox(height: 12),
                     Text(
                       'LOS TEMAS AJUSTAN EL ORBE Y LAS BARRERAS DEL JUEGO',

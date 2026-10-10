@@ -65,8 +65,6 @@ class SettingsRepository {
   /// and unlocked/selected theme. Keeps the sound/haptics preferences
   /// and the tutorial-seen flag so a reset doesn't re-nag the player.
   Future<void> resetProgress() async {
-    await ProgressStore.reset();
-    final prefs = await SharedPreferences.getInstance();
     final keysToKeep = {
       _soundEnabledKey,
       _hapticsEnabledKey,
@@ -74,10 +72,6 @@ class SettingsRepository {
       _difficultyKey,
       _comfortDimKey,
     };
-    for (final key in prefs.getKeys()) {
-      if (!keysToKeep.contains(key)) {
-        await prefs.remove(key);
-      }
-    }
+    await ProgressStore.reset(keysToKeep: keysToKeep);
   }
 }

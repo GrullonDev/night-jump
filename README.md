@@ -1,4 +1,4 @@
-# Night Jump 1.0
+# Night Jump 1.0.1
 
 Arcade nocturno sin conexión para Android e iOS. Toca para saltar, supera tu
 récord, completa misiones, gana Stardust, desbloquea temas y comparte tu vuelo.
@@ -34,7 +34,7 @@ obstáculos (+500) y se reinicia el lunes. La moneda única es Stardust.
 Se conservan los cuatro temas: Default y Cyberpunk gratuitos; Aurora cuesta
 200 y Eclipse 500. Un día con las tres misiones otorga 330 más los obstáculos.
 Con partidas casuales de 6–10 puntos, el primer tema pagado es alcanzable en
-aproximadamente 4–5 partidas; 210 por semana equivale a siete objetivos diarios
+aproximadamente 3–5 partidas; 210 por semana equivale a siete objetivos diarios
 de 30. Son valores razonados para 1.0; la duración real y diversión todavía
 deben revisarse mediante pruebas con jugadores.
 
@@ -62,6 +62,10 @@ Cobrar una misión y marcarla cobrada forma una sola escritura. Cobrar un tema y
 desbloquearlo también. Repetir la compra no vuelve a cobrar. Un resultado tiene
 identificador de partida para impedir su registro repetido. Stardust por barrera
 se guarda durante el vuelo; misiones y récords se registran al finalizar.
+La versión 1.0.1 guarda el número acumulado de barreras por partida y recupera
+escrituras fallidas al finalizar, sin acreditar dos veces el mismo Stardust.
+Si falla el guardado del resultado, puedes reintentarlo desde esa pantalla;
+las misiones ya cobradas no vuelven a entregar premios.
 
 `settings.tutorial_completed.v1` recuerda la práctica completada. La antigua
 `settings.how_to_play_seen` solo representaba un diálogo abierto y no se toma
@@ -104,4 +108,9 @@ bash tool/validate_release.sh
 ```
 
 Consulta [docs/RELEASE_1_0.md](docs/RELEASE_1_0.md) para firmas, resultados de
-validación y comprobaciones pendientes antes de distribución.
+validación anteriores y comprobaciones pendientes antes de distribución;
+[docs/RELEASE_1_0_1.md](docs/RELEASE_1_0_1.md) describe el parche actual.
+
+Para persistencia entre procesos y rendimiento en hardware, consulta
+[docs/NATIVE_QA.md](docs/NATIVE_QA.md). Las pruebas nativas usan datos QA
+aislados y no sustituyen la revisión manual de compartir o balance.

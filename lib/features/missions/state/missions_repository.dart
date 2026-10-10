@@ -36,6 +36,35 @@ class MissionsRepository {
     await prefs.setInt(_stardustKey, current + amount);
   });
 
+  /// A cumulative checkpoint makes retrying a gate write safe. The final
+  /// checkpoint also recovers gates whose individual writes failed.
+  Future<void> recordGateProgress({
+    required String runId,
+    required int obstaclesCleared,
+  }) => ProgressStore.transaction((prefs) async {
+    if (runId.isEmpty) throw ArgumentError.value(runId);
+    if (obstaclesCleared < 0) throw ArgumentError.value(obstaclesCleared);
+    if (prefs.getString('missions.last_run') == runId) return;
+    await _creditGateProgress(prefs, runId, obstaclesCleared);
+  });
+
+  Future<void> _creditGateProgress(
+    ProgressData prefs,
+    String runId,
+    int obstaclesCleared,
+  ) async {
+    final credited = prefs.getString('missions.gate_run') == runId
+        ? prefs.getInt('missions.gate_count') ?? 0
+        : 0;
+    if (obstaclesCleared <= credited) return;
+    await prefs.setInt(
+      _stardustKey,
+      (prefs.getInt(_stardustKey) ?? 0) + obstaclesCleared - credited,
+    );
+    await prefs.setString('missions.gate_run', runId);
+    await prefs.setInt('missions.gate_count', obstaclesCleared);
+  }
+
   Future<bool> spendStardust(int amount) =>
       ProgressStore.transaction((prefs) async {
         if (amount < 0) throw ArgumentError.value(amount);
@@ -70,10 +99,13 @@ class MissionsRepository {
     }
     await _rolloverIfNeeded(prefs);
     final before = prefs.getInt(_stardustKey) ?? 0;
-    await prefs.setInt(
-      _stardustKey,
-      before + (includeGateDust ? obstaclesCleared : 0),
-    );
+    if (includeGateDust) {
+      if (runId != null) {
+        await _creditGateProgress(prefs, runId, obstaclesCleared);
+      } else {
+        await prefs.setInt(_stardustKey, before + obstaclesCleared);
+      }
+    }
 
     await prefs.setInt(
       _dailyObstaclesKey,

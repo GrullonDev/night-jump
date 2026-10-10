@@ -76,6 +76,7 @@ class NightJumpGame extends FlameGame with HasCollisionDetection, TapCallbacks {
       _background = false;
   GameStatus _beforePause = GameStatus.playing;
   String _runId = '';
+  int _resultRewards = 0;
   String lossCause = '';
   int countdownStep = 0;
   final Set<Component> _runComponents = {};
@@ -151,6 +152,7 @@ class NightJumpGame extends FlameGame with HasCollisionDetection, TapCallbacks {
     _lastCenter = size.y / 2;
     _runId = DateTime.now().microsecondsSinceEpoch.toString();
     resultMissions = null;
+    _resultRewards = 0;
     affordableThemes = [];
     persistenceError = null;
     lossCause = '';
@@ -210,9 +212,11 @@ class NightJumpGame extends FlameGame with HasCollisionDetection, TapCallbacks {
       return;
     }
     // Persist each cleared gate in order; interruption does not lose earned dust.
-    missionsRepository.addDust(1).catchError((Object _) {
-      persistenceError = 'No se pudo guardar Stardust.';
-    });
+    missionsRepository
+        .recordGateProgress(runId: _runId, obstaclesCleared: score.value)
+        .catchError((Object _) {
+          persistenceError = 'No se pudo guardar Stardust.';
+        });
     dustEarnedThisRun.value++;
     if (score.value > highScore.value && !isNewHighScore.value) {
       isNewHighScore.value = true;
@@ -291,10 +295,24 @@ class NightJumpGame extends FlameGame with HasCollisionDetection, TapCallbacks {
     pauseEngine();
     overlays.remove(hudOverlay);
     sound.gameOver();
+    await _saveResult();
+  }
+
+  Future<void> retrySaveResult() async {
+    if (_disposed || _saving || status != GameStatus.gameOver) return;
+    _saving = true;
+    await _saveResult();
+  }
+
+  Future<void> _saveResult() async {
     final finalScore = score.value;
     final finalDifficulty = difficulty.value;
     final finalRunId = _runId;
     try {
+      await missionsRepository.recordGateProgress(
+        runId: finalRunId,
+        obstaclesCleared: finalScore,
+      );
       final beat = await scoreRepository.saveScoreIfHigh(
         finalDifficulty,
         finalScore,
@@ -303,8 +321,10 @@ class NightJumpGame extends FlameGame with HasCollisionDetection, TapCallbacks {
       final rewards = await missionsRepository.recordRunFinished(
         obstaclesCleared: finalScore,
         runId: finalRunId,
-        includeGateDust: false,
       );
+      // The gate checkpoint above leaves only mission rewards in this delta.
+      // A retry after a later read fails must retain already awarded rewards.
+      _resultRewards += rewards;
       resultMissions = await missionsRepository.loadSnapshot();
       final unlocked = await themeRepository.getUnlockedPaletteIds();
       affordableThemes = NeonPalette.catalog
@@ -314,10 +334,11 @@ class NightJumpGame extends FlameGame with HasCollisionDetection, TapCallbacks {
           )
           .toList();
       if (!_disposed) {
-        isNewHighScore.value = beat;
+        isNewHighScore.value = isNewHighScore.value || beat;
         highScore.value = best;
-        dustEarnedThisRun.value += rewards;
+        dustEarnedThisRun.value = finalScore + _resultRewards;
       }
+      persistenceError = null;
     } catch (_) {
       persistenceError =
           'No se pudo guardar el resultado. Revisa el espacio del dispositivo.';
